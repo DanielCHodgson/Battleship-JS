@@ -1,4 +1,4 @@
-import GameBoard from "../GameBoard";
+import GameBoard from "../board/GameBoard";
 
 export default class Player {
   #name = null;
