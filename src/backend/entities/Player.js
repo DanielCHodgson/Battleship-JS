@@ -1,4 +1,4 @@
-import GameBoard from "../board/GameBoard";
+import GameBoard from "../board/Gameboard";
 
 export default class Player {
   #name = null;
@@ -11,7 +11,9 @@ export default class Player {
     this.#board = new GameBoard();
   }
 
-  placeHit() {}
+  placeHit(x, y) {
+    this.#board.reciveAttack(x, y);
+  }
 
   placeMiss() {}
 }

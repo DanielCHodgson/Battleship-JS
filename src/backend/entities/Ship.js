@@ -2,16 +2,32 @@ export default class Ship {
   #name = null;
   #length = null;
   #positions = [];
-  #hits = [];
+  #hits = 0;
 
-  constructor(name, length) {
+  constructor(name, length, positions) {
     this.#name = name;
     this.#length = length;
+    this.#positions = positions;
   }
 
-  place(positions) {
-    this.#positions.push(positions);
+  //place(positions) {
+  // if(this.#areValidPositions(positions));
+  //this.#positions.push(positions);
+  //}
+
+  hit() {
+    this.#hits++;
   }
 
-  hit() {}
+  isSunk() {
+    return this.#hits >= this.#length;
+  }
+
+  //getPositions() {
+  // return this.#positions;
+  //}
+
+  getName() {
+    return this.#name;
+  }
 }

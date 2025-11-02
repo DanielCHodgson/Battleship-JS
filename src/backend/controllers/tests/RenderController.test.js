@@ -1,1 +1,1 @@
-import RenderController from "../RenderController";
+import RenderController from "../GameController";
