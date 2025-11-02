@@ -11,7 +11,7 @@ describe("Gameboard", () => {
 
     expect(ships.length).toBe(1);
     expect(ships[0]).toBeInstanceOf(Ship);
-    expect(ships[0].name).toBe("destroyer");
+    expect(ships[0].getName()).toBe("destroyer");
   });
 
   test("throws error when ship positions are out of bounds", () => {
