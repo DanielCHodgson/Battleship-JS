@@ -1,6 +1,6 @@
 .gameboard {
-  width: 800px;
-  height: 800px;
+  width: 600px;
+  height: 600px;
   background-color: #3bc0b9;
 
   display: grid;

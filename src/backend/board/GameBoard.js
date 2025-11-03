@@ -1,4 +1,5 @@
 import Ship from "../entities/Ship";
+import EventBus from "../utilities/EventBus";
 
 export default class Gameboard {
   #size;
@@ -25,6 +26,7 @@ export default class Gameboard {
 
     ship.setPositions(positions);
     this.#ships.push(ship);
+    EventBus.emit("ship placed", ship);
   }
 
   receiveAttack(attack) {
@@ -41,7 +43,11 @@ export default class Gameboard {
 
     for (const ship of this.#ships) {
       if (
-        ship.getPositions().some((position) => position.x === attack.x && position.y === attack.y)
+        ship
+          .getPositions()
+          .some(
+            (position) => position.x === attack.x && position.y === attack.y,
+          )
       ) {
         ship.hit();
         this.#hits.push(attack);

@@ -1,25 +1,33 @@
 import DomUtility from "../../utilities/DomUtility";
 import htmlString from "./board-component.html";
 import "./board-component.css";
+import EventBus from "../../../backend/utilities/EventBus";
 
 export default class BoardComponent {
   #container;
   #element;
-  #fields;
+  #squares;
 
   constructor(container) {
     this.#container = container;
     this.#element = DomUtility.stringToHTML(htmlString);
-    this.#fields = this.cacheFields();
-    this.registerEvents();
+    this.#squares = this.#createGrid(10);
+    this.#registerEvents();
     this.render();
   }
 
-  cacheFields() {}
+  #registerEvents() {
+    EventBus.on("ship placed", (ship) => this.renderShip(ship));
+  }
 
-  registerEvents() {}
+  renderShip(ship) {
+    
 
-  createGrid(size) {
+  }
+
+  #createGrid(size) {
+    const grid = [];
+
     for (let i = 0; i < size; i++) {
       for (let j = 0; j < size; j++) {
         const square = document.createElement("div");
@@ -27,13 +35,20 @@ export default class BoardComponent {
         square.dataset.row = i;
         square.dataset.col = j;
         square.textContent = `${i},${j}`;
-        this.#element.appendChild(square);
+        square.addEventListener("click", () =>
+          EventBus.emit("square clicked", {
+            x: square.dataset.row,
+            y: square.dataset.col,
+          }),
+        );
+        grid.push(square);
       }
     }
+    return grid;
   }
 
   render() {
-    this.createGrid(10);
+    this.#squares.forEach((square) => this.#element.appendChild(square));
     this.#container.appendChild(this.#element);
   }
 }

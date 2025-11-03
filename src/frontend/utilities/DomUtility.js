@@ -1,3 +1,5 @@
+
+
 export default class DomUtility {
   static stringToHTML(string) {
     if (typeof string !== "string" || string.trim() === "") {
