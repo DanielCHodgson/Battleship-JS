@@ -1,4 +1,4 @@
-import GameBoard from "../board/Gameboard";
+import Gameboard from "../board/Gameboard";
 
 export default class Player {
   #name = null;
@@ -8,12 +8,14 @@ export default class Player {
   constructor(name, isAI) {
     this.#name = name;
     this.#isAI = isAI;
-    this.#board = new GameBoard();
+    this.#board = new Gameboard();
   }
 
-  placeHit(x, y) {
-    this.#board.reciveAttack(x, y);
+  placeHit(point) {
+    this.#board.receiveAttack(point);
   }
 
-  placeMiss() {}
+  getGameboard() {
+    return this.#board;
+  }
 }

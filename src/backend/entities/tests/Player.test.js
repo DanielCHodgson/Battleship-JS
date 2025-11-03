@@ -1,23 +1,17 @@
-import Player from "../Player";
-import GameBoard from "../board/GameBoard";
+import Gameboard from "../../board/Gameboard";
+jest.mock("../../board/Gameboard");
 
-jest.mock("../board/GameBoard");
+import Player from "../Player";
 
 describe("Player class", () => {
-  beforeEach(() => {
-    GameBoard.mockClear();
-  });
-
-  test("placeHit should call GameBoard method (when implemented)", () => {
-    const mockHit = jest.fn();
-    GameBoard.mockImplementation(() => ({
-      receiveAttack: mockHit,
+  test("placeHit should call Gameboard's receiveAttack method", () => {
+    const mockReceiveAttack = jest.fn();
+    Gameboard.mockImplementation(() => ({
+      receiveAttack: mockReceiveAttack,
     }));
 
     const player = new Player("AI", true);
-    if (player.placeHit) {
-      player.placeHit(3, 4);
-      expect(mockHit).toHaveBeenCalledWith(3, 4);
-    }
+    player.placeHit({ x: 3, y: 4 });
+    expect(mockReceiveAttack).toHaveBeenCalledWith({ x: 3, y: 4 });
   });
 });
