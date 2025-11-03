@@ -7,17 +7,21 @@ export default class GameController {
   #turnStates = [];
 
   constructor() {
-    this.#initTestBoard();
+    this.#initTestState();
   }
 
-  #initTestBoard() {
+  #initTestState() {
     const player1 = new Player("Player1", false);
+    const gameboard = player1.getGameboard();
 
-    const ship1 = new Ship("destroyer", 4)
-    const ship2 = new Ship("tug", 4)
+    const ship1 = new Ship("destroyer", 4);
+    const ship2 = new Ship("tug", 4);
 
-    player1.getGameboard().placeShip(ship1, { x: 0, y: 0 }, "horizontal");
-    player1.getGameboard().placeShip(ship2, { x: 5, y: 4 }, "vertical");
+    gameboard.placeShip(ship1, { x: 0, y: 0 }, "horizontal");
+    gameboard.placeShip(ship2, { x: 5, y: 4 }, "vertical");
+
+    console.log(gameboard.getShips())
+    gameboard.getShips().forEach((ship) => EventBus.emit("render ship", ship));
   }
 
   startGame() {

@@ -6,49 +6,28 @@ import EventBus from "../../../backend/utilities/EventBus";
 export default class BoardComponent {
   #container;
   #element;
-  #squares;
 
   constructor(container) {
     this.#container = container;
-    this.#element = DomUtility.stringToHTML(htmlString);
-    this.#squares = this.#createGrid(10);
-    this.#registerEvents();
-    this.render();
+    this.#element =   this.#element = DomUtility.stringToHTML(htmlString);;
+    this.#container.appendChild(this.#element);
+    EventBus.emit("board ready", this.#element);
   }
 
-  #registerEvents() {
-    EventBus.on("ship placed", (ship) => this.renderShip(ship));
-  }
-
-  renderShip(ship) {
-    
-
-  }
-
-  #createGrid(size) {
-    const grid = [];
-
-    for (let i = 0; i < size; i++) {
-      for (let j = 0; j < size; j++) {
+  createGrid(size = 10) {
+    const squares = [];
+    for (let row = 0; row < size; row++) {
+      for (let col = 0; col < size; col++) {
         const square = document.createElement("div");
         square.className = "square";
-        square.dataset.row = i;
-        square.dataset.col = j;
-        square.textContent = `${i},${j}`;
+        square.dataset.row = row;
+        square.dataset.col = col;
         square.addEventListener("click", () =>
-          EventBus.emit("square clicked", {
-            x: square.dataset.row,
-            y: square.dataset.col,
-          }),
+          EventBus.emit("square clicked", { x: col, y: row }),
         );
-        grid.push(square);
+        squares.push(square);
       }
     }
-    return grid;
-  }
-
-  render() {
-    this.#squares.forEach((square) => this.#element.appendChild(square));
-    this.#container.appendChild(this.#element);
+    this.#element.append(...squares);
   }
 }

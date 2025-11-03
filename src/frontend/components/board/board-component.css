@@ -17,6 +17,8 @@
   align-items: center;
   font-weight: bold;
   cursor: pointer;
+  font-size: 0.9rem;
+  color: #303030;
 }
 .square:hover {
   opacity: 0.8;
