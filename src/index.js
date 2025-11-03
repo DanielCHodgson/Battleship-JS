@@ -2,13 +2,14 @@ import "./styles/reset-modern.css";
 import "./styles/styles.css";
 
 import GameController from "./backend/controllers/GameController";
-import EventBus from "./backend/utilities/EventBus";
+import BoardComponent from "./frontend/components/board/board-component";
 
-const gameEvents = new EventBus();
 let gameController;
+let boardComponent;
 
 function init() {
-  gameController = new GameController(gameEvents);
+  gameController = new GameController();
+  boardComponent = new BoardComponent(document.querySelector("body"));
 }
 
 init();
