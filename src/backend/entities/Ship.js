@@ -4,16 +4,10 @@ export default class Ship {
   #positions = [];
   #hits = 0;
 
-  constructor(name, length, positions) {
+  constructor(name, length) {
     this.#name = name;
     this.#length = length;
-    this.#positions = positions;
   }
-
-  //place(positions) {
-  // if(this.#areValidPositions(positions));
-  //this.#positions.push(positions);
-  //}
 
   hit() {
     this.#hits++;
@@ -23,11 +17,19 @@ export default class Ship {
     return this.#hits >= this.#length;
   }
 
-  //getPositions() {
-  // return this.#positions;
-  //}
+  getLength() {
+    return this.#length;
+  }
+
+  getPositions() {
+    return this.#positions;
+  }
 
   getName() {
     return this.#name;
+  }
+
+  setPositions(positions) {
+    this.#positions = positions;
   }
 }
