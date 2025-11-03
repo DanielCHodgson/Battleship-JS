@@ -5,16 +5,10 @@ export default class GameController {
   #players = [];
   #turnStates = [];
 
-  constructor(eventBus) {
-    this.#eventBus = eventBus;
-  }
+  constructor() {}
 
   startGame() {
-    this.#players.push(
-      new Player("Player 1", false),
-      new Player("Player 2"),
-      false,
-    );
+    return "game started!";
   }
 
   nextTurn() {}
