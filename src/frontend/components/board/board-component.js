@@ -16,16 +16,25 @@ export default class BoardComponent {
 
   createGrid(size = 10) {
     const squares = [];
-    for (let row = 0; row < size; row++) {
-      for (let col = 0; col < size; col++) {
+
+    for (let col = 0; col < size; col++) {
+      for (let row = 0; row < size; row++) {
         const square = document.createElement("div");
         square.className = "square";
         square.dataset.row = row;
         square.dataset.col = col;
-        square.addEventListener("click", (square) => EventBus.emit("square clicked", square));
+
+        square.addEventListener("click", () => {
+          EventBus.emit("square clicked", {
+            x: col,
+            y: row,
+          });
+        });
+
         squares.push(square);
       }
     }
+
     this.#element.append(...squares);
   }
 

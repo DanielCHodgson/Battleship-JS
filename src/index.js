@@ -17,8 +17,7 @@ function init() {
   boardComponent = new BoardComponent(body);
   renderController = new RenderController(boardComponent);
   gameController = new GameController();
-
- // gameController.startGame();
+  gameController.startGame();
 }
 
 init();

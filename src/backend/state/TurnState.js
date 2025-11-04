@@ -15,11 +15,11 @@ export default class TurnState {
     return this.#turn;
   }
 
-  getCurrentPlayer() {
+  getPlayer() {
     return this.#currPlayer;
   }
 
-  getEnemyBoard() {
+  getBoard() {
     return this.#enemyBoard;
   }
 

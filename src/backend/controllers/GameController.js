@@ -7,22 +7,10 @@ export default class GameController {
   #players = {};
   #turnStates = [];
 
-  constructor() {
-    this.#registerEvents();
-  }
-
-  #registerEvents() {
-    EventBus.on("square clicked", (square) => this.selectSquare(square));
-  }
-
-  selectSquare(square) {
-    const currentTurn = this.#turnStates[0];
-    if (!currentTurn) return;
-    const board = currentTurn.getPlayer().getGameboard();
-  }
+  constructor() {}
 
   #initTestPlayers() {
-    const player1 = new Player("Player 1", false);
+    const player1 = new Player("Player1", false);
     const gameboard1 = player1.getGameboard();
     gameboard1.placeShip(
       new Ship("destroyer", 4),
@@ -31,7 +19,7 @@ export default class GameController {
     );
     gameboard1.placeShip(new Ship("tug", 4), { x: 5, y: 4 }, "vertical");
 
-    const player2 = new Player("Player 2", false);
+    const player2 = new Player("Player2", false);
     const gameboard2 = player2.getGameboard();
     gameboard2.placeShip(
       new Ship("destroyer", 4),
@@ -54,6 +42,10 @@ export default class GameController {
     this.#turnStates.push(turnState);
 
     EventBus.emit("turn started", turnState);
+    EventBus.on("square clicked", (point) => {
+      this.#turnStates[0].getBoard().receiveAttack(point);
+    });
+
     return "game started!";
   }
 

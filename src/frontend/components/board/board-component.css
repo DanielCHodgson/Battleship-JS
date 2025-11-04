@@ -28,3 +28,9 @@
 .square.ship {
   background-color: #858585;
 }
+.square.hit {
+  background-color: #ff0000;
+}
+.square.miss {
+  background-color: #000000;
+}

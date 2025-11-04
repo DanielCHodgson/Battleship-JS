@@ -18,4 +18,8 @@ export default class Player {
   getGameboard() {
     return this.#board;
   }
+
+  getName() {
+    return this.#name;
+  }
 }

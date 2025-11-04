@@ -18,15 +18,24 @@ export default class Hud {
   }
 
   #casheFields() {
-    this.#fields.display = this.#element.querySelector(".display");
+    this.#fields.actionDisplay = this.#element.querySelector(".action-display");
+    this.#fields.turnDisplay = this.#element.querySelector(".turn-display");
   }
 
   #registerEvents() {
-    EventBus.on(
-      "square clicked",
-      (square) =>
-        (this.#fields.display.textContent = `Selected (${square.x}, ${square.y})`),
-    );
+    EventBus.on("square clicked", (square) => {
+      this.#fields.actionDisplay.textContent = `Selected (${square.x}, ${square.y})`;
+    });
+
+    EventBus.on("turn started", (turn) => this.#printTurnInfo(turn));
+  }
+
+  #printTurnInfo(turn) {
+    this.#fields.turnDisplay.textContent =
+    `
+    Turn: ${turn.getTurn()} |
+    Active player: ${turn.getPlayer().getName()}
+    `;
   }
 
   render() {

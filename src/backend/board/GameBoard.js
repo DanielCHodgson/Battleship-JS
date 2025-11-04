@@ -29,33 +29,36 @@ export default class Gameboard {
     EventBus.emit("ship placed", ship);
   }
 
-  receiveAttack(attack) {
-    if (!this.#isInBounds(attack)) {
+  receiveAttack(point) {
+    if (!this.#isInBounds(point)) {
       throw new Error("Attack is out of bounds");
     }
 
     if (
-      this.#hits.some((point) => this.#collides(attack, point)) ||
-      this.#misses.some((point) => this.#collides(attack, point))
+      this.#hits.some((hit) => this.#collides(hit, point)) ||
+      this.#misses.some((miss) => this.#collides(miss, point))
     ) {
       throw new Error("Point already attacked");
     }
+    let result = null;
 
     for (const ship of this.#ships) {
       if (
         ship
           .getPositions()
-          .some(
-            (position) => position.x === attack.x && position.y === attack.y,
-          )
+          .some((position) => position.x === point.x && position.y === point.y)
       ) {
         ship.hit();
-        this.#hits.push(attack);
+        this.#hits.push(point);
+        result = "hit";
+        EventBus.emit("render attack", { point, result });
         return "hit";
       }
     }
-    this.#misses.push(attack);
-    return "miss";
+    this.#misses.push(point);
+    result = "miss";
+    EventBus.emit("render attack", { point, result });
+    return result;
   }
 
   #isInBounds(point) {

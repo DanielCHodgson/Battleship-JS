@@ -32,8 +32,8 @@ describe("GameController", () => {
     const firstTurn = turns[0];
 
     expect(firstTurn.getTurn()).toBe(1);
-    expect(firstTurn.getCurrentPlayer()).toBe(player1);
-    expect(firstTurn.getEnemyBoard()).toBe(gameboard2);
+    expect(firstTurn.getPlayer()).toBe(player1);
+    expect(firstTurn.getBoard()).toBe(gameboard2);
     expect(firstTurn.getPhase()).toBe("play");
   });
 });
