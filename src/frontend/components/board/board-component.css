@@ -1,16 +1,16 @@
 .gameboard {
   width: 600px;
   height: 600px;
-  background-color: #3bc0b9;
+  background-color: #d4f7f5;
 
   display: grid;
   grid-template-columns: repeat(10, 1fr);
   grid-template-rows: repeat(10, 1fr);
-  border: 1px solid #333;
+  outline: 1px solid #333;
 }
 
 .square {
-  background-color: #ffffff;
+ background-color: #95ddda;
   border: 1px solid #333;
   display: flex;
   justify-content: center;
@@ -20,6 +20,11 @@
   font-size: 0.9rem;
   color: #303030;
 }
+
 .square:hover {
   opacity: 0.8;
+}
+
+.square.ship {
+  background-color: #858585;
 }

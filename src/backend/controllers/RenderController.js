@@ -1,33 +1,21 @@
 import EventBus from "../utilities/EventBus";
 
 export default class RenderController {
-  constructor() {
-    EventBus.on("board ready", (boardEl) => this.renderBoard(boardEl));
+  #board;
+
+  constructor(board) {
+    this.#board = board;
     EventBus.on("render ship", (ship) => this.renderShip(ship));
     EventBus.on("attack result", (data) => this.renderAttack(data));
   }
 
-  renderBoard(boardElement) {
-    console.log("Board is ready!");
-  }
-
   renderShip(ship) {
     const positions = ship.getPositions();
-    const board = document.querySelector(".gameboard");
-    positions.forEach((p) => {
-      const square = board.querySelector(
-        `.square[data-row="${p.y}"][data-col="${p.x}"]`,
-      );
-      if (square) square.classList.add("ship");
-    });
+    positions.forEach(({ x, y }) => this.#board.markShip(x, y));
   }
 
   renderAttack({ position, result }) {
-    const board = document.querySelector(".gameboard");
-    const square = board.querySelector(
-      `.square[data-row="${position.y}"][data-col="${position.x}"]`,
-    );
-    if (!square) return;
-    square.classList.add(result === "hit" ? "hit" : "miss");
+    if (result === "hit") this.#board.markHit(position.x, position.y);
+    else this.#board.markMiss(position.x, position.y);
   }
 }

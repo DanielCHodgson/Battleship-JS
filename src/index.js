@@ -15,8 +15,10 @@ let boardComponent;
 function init() {
   hudComponent = new Hud(body);
   boardComponent = new BoardComponent(body);
-  renderController = new RenderController();
+  renderController = new RenderController(boardComponent);
   gameController = new GameController();
+
+ // gameController.startGame();
 }
 
 init();

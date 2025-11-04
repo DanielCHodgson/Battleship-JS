@@ -9,9 +9,9 @@ export default class BoardComponent {
 
   constructor(container) {
     this.#container = container;
-    this.#element =   this.#element = DomUtility.stringToHTML(htmlString);;
+    this.#element = DomUtility.stringToHTML(htmlString);
+    this.createGrid();
     this.#container.appendChild(this.#element);
-    EventBus.emit("board ready", this.#element);
   }
 
   createGrid(size = 10) {
@@ -22,12 +22,32 @@ export default class BoardComponent {
         square.className = "square";
         square.dataset.row = row;
         square.dataset.col = col;
-        square.addEventListener("click", () =>
-          EventBus.emit("square clicked", { x: col, y: row }),
-        );
+        square.addEventListener("click", (square) => EventBus.emit("square clicked", square));
         squares.push(square);
       }
     }
     this.#element.append(...squares);
+  }
+
+  markShip(x, y) {
+    this.#findSquare(x, y)?.classList.add("ship");
+  }
+
+  markHit(x, y) {
+    this.#findSquare(x, y)?.classList.add("hit");
+  }
+
+  markMiss(x, y) {
+    this.#findSquare(x, y)?.classList.add("miss");
+  }
+
+  #findSquare(x, y) {
+    return this.#element.querySelector(
+      `.square[data-row="${y}"][data-col="${x}"]`,
+    );
+  }
+
+  getElement() {
+    return this.#element;
   }
 }
