@@ -24,8 +24,14 @@ describe("RenderController", () => {
 
   test("should register event listeners on EventBus", () => {
     expect(EventBus.on).toHaveBeenCalledTimes(2);
-    expect(EventBus.on).toHaveBeenCalledWith("render ship", expect.any(Function));
-    expect(EventBus.on).toHaveBeenCalledWith("attack result", expect.any(Function));
+    expect(EventBus.on).toHaveBeenCalledWith(
+      "render ship",
+      expect.any(Function),
+    );
+    expect(EventBus.on).toHaveBeenCalledWith(
+      "render attack",
+      expect.any(Function),
+    );
   });
 
   test("renderShip should mark all ship positions", () => {
@@ -45,7 +51,7 @@ describe("RenderController", () => {
   });
 
   test("renderAttack should call markHit when result is 'hit'", () => {
-    const data = { position: { x: 3, y: 4 }, result: "hit" };
+    const data = { point: { x: 3, y: 4 }, result: "hit" };
     renderController.renderAttack(data);
 
     expect(mockBoard.markHit).toHaveBeenCalledWith(3, 4);
@@ -53,7 +59,7 @@ describe("RenderController", () => {
   });
 
   test("renderAttack should call markMiss when result is not 'hit'", () => {
-    const data = { position: { x: 5, y: 6 }, result: "miss" };
+    const data = { point: { x: 5, y: 6 }, result: "miss" };
     renderController.renderAttack(data);
 
     expect(mockBoard.markMiss).toHaveBeenCalledWith(5, 6);
@@ -62,10 +68,10 @@ describe("RenderController", () => {
 
   test("should correctly handle 'render ship' and 'attack result' events from EventBus", () => {
     const renderShipCallback = EventBus.on.mock.calls.find(
-      (call) => call[0] === "render ship"
+      (call) => call[0] === "render ship",
     )[1];
     const attackResultCallback = EventBus.on.mock.calls.find(
-      (call) => call[0] === "attack result"
+      (call) => call[0] === "render attack",
     )[1];
 
     const mockShip = {
@@ -74,7 +80,7 @@ describe("RenderController", () => {
     renderShipCallback(mockShip);
     expect(mockBoard.markShip).toHaveBeenCalledWith(7, 8);
 
-    attackResultCallback({ position: { x: 9, y: 10 }, result: "hit" });
+    attackResultCallback({ point: { x: 9, y: 10 }, result: "hit" });
     expect(mockBoard.markHit).toHaveBeenCalledWith(9, 10);
   });
 });

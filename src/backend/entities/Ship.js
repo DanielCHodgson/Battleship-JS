@@ -13,6 +13,12 @@ export default class Ship {
     this.#hits++;
   }
 
+  isHit(point) {
+    return this.#positions.some(
+      (pos) => pos.x === point.x && pos.y === point.y,
+    );
+  }
+
   isSunk() {
     return this.#hits >= this.#length;
   }

@@ -27,14 +27,14 @@ export default class Hud {
       this.#fields.actionDisplay.textContent = `Selected (${square.x}, ${square.y})`;
     });
 
-    EventBus.on("turn started", (turn) => this.#printTurnInfo(turn));
+    EventBus.on("turn started", (data) => this.#printTurnInfo(data.state));
   }
 
-  #printTurnInfo(turn) {
+  #printTurnInfo(state) {
     this.#fields.turnDisplay.textContent =
     `
-    Turn: ${turn.getTurn()} |
-    Active player: ${turn.getPlayer().getName()}
+    Turn: ${state.getTurn()} |
+    Active player: ${state.getPlayer().getName()}
     `;
   }
 

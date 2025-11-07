@@ -1,21 +1,35 @@
 import EventBus from "../utilities/EventBus";
 
 export default class RenderController {
-  #board;
-
-  constructor(board) {
-    this.#board = board;
-    EventBus.on("render ship", (ship) => this.renderShip(ship));
-    EventBus.on("render attack", ({ point, result }) => this.renderAttack({ point, result }));
+  constructor() {
+    EventBus.on("attack resolved", (data) => this.renderBoard(data.board));
+    EventBus.on("turn started", (data) => this.renderBoard(data.board));
   }
 
-  renderShip(ship) {
-    const positions = ship.getPositions();
-    positions.forEach(({ x, y }) => this.#board.markShip(x, y));
+  renderBoard(board) {
+    this.clearBoard();
+    board.getHits().forEach(({ x, y }) => this.paintCell(x, y, "hit"));
+    board.getMisses().forEach(({ x, y }) => this.paintCell(x, y, "miss"));
   }
 
-  renderAttack({ point, result }) {
-    if (result === "hit") this.#board.markHit(point.x, point.y);
-    else this.#board.markMiss(point.x, point.y);
+  renderShips() {
+    board
+      .getShips()
+      .forEach((ship) =>
+        ship.positions.forEach(({ x, y }) => this.paintCell(x, y, "ship")),
+      );
+  }
+
+  paintCell(x, y, type) {
+    const cell = document.querySelector(`[data-col='${x}'][data-row='${y}']`);
+    if (!cell) return;
+    cell.classList.remove("ship", "hit", "miss");
+    cell.classList.add(type);
+  }
+
+  clearBoard() {
+    document
+      .querySelectorAll(".board-cell")
+      .forEach((cell) => cell.classList.remove("ship", "hit", "miss"));
   }
 }
