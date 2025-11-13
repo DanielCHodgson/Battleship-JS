@@ -30,6 +30,10 @@ export default class Gameboard {
   }
 
   receiveAttack(point) {
+    if (!this.#isInBounds(point)) {
+      throw new Error("Attack is out of bounds");
+    }
+
     const hitShip = this.#ships.find((ship) => ship.isHit(point));
 
     if (hitShip) {

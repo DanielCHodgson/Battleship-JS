@@ -3,16 +3,18 @@ import EventBus from "../utilities/EventBus";
 export default class RenderController {
   constructor() {
     EventBus.on("attack resolved", (data) => this.renderBoard(data.board));
-    EventBus.on("turn started", (data) => this.renderBoard(data.board));
+    EventBus.on("turn updated", (data) => {
+      this.clearBoard();
+      this.renderBoard(data.board);
+    });
   }
 
   renderBoard(board) {
-    this.clearBoard();
     board.getHits().forEach(({ x, y }) => this.paintCell(x, y, "hit"));
     board.getMisses().forEach(({ x, y }) => this.paintCell(x, y, "miss"));
   }
 
-  renderShips() {
+  renderShips(board) {
     board
       .getShips()
       .forEach((ship) =>
@@ -29,7 +31,7 @@ export default class RenderController {
 
   clearBoard() {
     document
-      .querySelectorAll(".board-cell")
+      .querySelectorAll(".gameboard > *")
       .forEach((cell) => cell.classList.remove("ship", "hit", "miss"));
   }
 }

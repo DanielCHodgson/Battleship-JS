@@ -27,7 +27,7 @@ export default class Hud {
       this.#fields.actionDisplay.textContent = `Selected (${square.x}, ${square.y})`;
     });
 
-    EventBus.on("turn started", (data) => this.#printTurnInfo(data.state));
+    EventBus.on("turn updated", (data) => this.#printTurnInfo(data.state));
   }
 
   #printTurnInfo(state) {

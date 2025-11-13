@@ -1,11 +1,16 @@
-import Gameboard from "./Gameboard";
+import Gameboard from "./GameBoard";
 import Ship from "../entities/Ship";
 
 describe("Gameboard", () => {
-  const gameboard = new Gameboard(10);
-  const ship = new Ship("destroyer", 4);
+  let gameboard;
+  let ship;
 
-  test("ship is placed on the the gameboard", () => {
+  beforeEach(() => {
+    gameboard = new Gameboard(10);
+    ship = new Ship("destroyer", 4);
+  });
+
+  test("ship is placed on the gameboard", () => {
     gameboard.placeShip(ship, { x: 0, y: 0 }, "horizontal");
 
     const ships = gameboard.getShips();
@@ -29,12 +34,18 @@ describe("Gameboard", () => {
 
   test("an attack is placed on a point containing a ship", () => {
     gameboard.placeShip(ship, { x: 0, y: 0 }, "horizontal");
-    expect(gameboard.receiveAttack({ x: 0, y: 0 })).toBe("hit");
+    expect(gameboard.receiveAttack({ x: 0, y: 0 })).toStrictEqual({
+      point: { x: 0, y: 0 },
+      result: "hit",
+    });
   });
 
   test("an attack is placed on an empty point", () => {
     gameboard.placeShip(ship, { x: 0, y: 0 }, "horizontal");
-    expect(gameboard.receiveAttack({ x: 0, y: 1 })).toBe("miss");
+    expect(gameboard.receiveAttack({ x: 0, y: 1 })).toStrictEqual({
+      point: { x: 0, y: 1 },
+      result: "miss",
+    });
   });
 
   test("an attack is placed out of bounds", () => {

@@ -41,12 +41,14 @@ export default class GameController {
     const firstTurn = new TurnState(1, player1, player2.getGameboard(), "play");
     this.#turnStates.push(firstTurn);
 
-    EventBus.emit("turn started", { state: firstTurn, board: firstTurn.getBoard() });
+    EventBus.emit("turn updated", {
+      state: firstTurn,
+      board: firstTurn.getBoard(),
+    });
     return "game started!";
   }
 
   nextTurn() {
-    console.log("next turn!");
     const currTurn = this.getCurrentTurn();
     if (!currTurn) return;
 
@@ -56,13 +58,15 @@ export default class GameController {
     const newTurn = new TurnState(
       currTurn.getTurn() + 1,
       nextPlayer,
-      nextPlayer.getGameboard(),
+      currTurn.getPlayer().getGameboard(),
       "play",
     );
 
     this.#turnStates.push(newTurn);
-    EventBus.emit("turn started", { state: newTurn, board: newTurn.getBoard() });
-    EventBus.emit("render board", newTurn.getBoard());
+    EventBus.emit("turn updated", {
+      state: newTurn,
+      board: newTurn.getBoard(),
+    });
   }
 
   previousTurn() {

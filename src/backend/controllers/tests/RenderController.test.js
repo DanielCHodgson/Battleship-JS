@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import EventBus from "../../utilities/EventBus";
 import RenderController from "../RenderController";
 
@@ -7,80 +10,105 @@ jest.mock("../../utilities/EventBus", () => ({
 }));
 
 describe("RenderController", () => {
-  let mockBoard;
   let renderController;
+  let mockBoard;
 
   beforeEach(() => {
-    mockBoard = {
-      markShip: jest.fn(),
-      markHit: jest.fn(),
-      markMiss: jest.fn(),
-    };
-
     jest.clearAllMocks();
-
-    renderController = new RenderController(mockBoard);
-  });
-
-  test("should register event listeners on EventBus", () => {
-    expect(EventBus.on).toHaveBeenCalledTimes(2);
-    expect(EventBus.on).toHaveBeenCalledWith(
-      "render ship",
-      expect.any(Function),
-    );
-    expect(EventBus.on).toHaveBeenCalledWith(
-      "render attack",
-      expect.any(Function),
-    );
-  });
-
-  test("renderShip should mark all ship positions", () => {
-    const mockShip = {
-      getPositions: jest.fn(() => [
-        { x: 1, y: 1 },
-        { x: 2, y: 2 },
+    renderController = new RenderController();
+    mockBoard = {
+      getHits: jest.fn(() => [{ x: 1, y: 1 }]),
+      getMisses: jest.fn(() => [{ x: 2, y: 2 }]),
+      getShips: jest.fn(() => [
+        { positions: [{ x: 3, y: 3 }, { x: 4, y: 4 }] },
       ]),
     };
-
-    renderController.renderShip(mockShip);
-
-    expect(mockShip.getPositions).toHaveBeenCalled();
-    expect(mockBoard.markShip).toHaveBeenCalledTimes(2);
-    expect(mockBoard.markShip).toHaveBeenNthCalledWith(1, 1, 1);
-    expect(mockBoard.markShip).toHaveBeenNthCalledWith(2, 2, 2);
   });
 
-  test("renderAttack should call markHit when result is 'hit'", () => {
-    const data = { point: { x: 3, y: 4 }, result: "hit" };
-    renderController.renderAttack(data);
-
-    expect(mockBoard.markHit).toHaveBeenCalledWith(3, 4);
-    expect(mockBoard.markMiss).not.toHaveBeenCalled();
+  test("should register 'attack resolved' and 'turn updated' event listeners on EventBus", () => {
+    expect(EventBus.on).toHaveBeenCalledTimes(2);
+    expect(EventBus.on).toHaveBeenCalledWith(
+      "attack resolved",
+      expect.any(Function),
+    );
+    expect(EventBus.on).toHaveBeenCalledWith(
+      "turn updated",
+      expect.any(Function),
+    );
   });
 
-  test("renderAttack should call markMiss when result is not 'hit'", () => {
-    const data = { point: { x: 5, y: 6 }, result: "miss" };
-    renderController.renderAttack(data);
+  test("renderBoard should paint hits and misses", () => {
+    const paintSpy = jest.spyOn(renderController, "paintCell").mockImplementation(() => {});
+    renderController.renderBoard(mockBoard);
 
-    expect(mockBoard.markMiss).toHaveBeenCalledWith(5, 6);
-    expect(mockBoard.markHit).not.toHaveBeenCalled();
+    expect(mockBoard.getHits).toHaveBeenCalled();
+    expect(mockBoard.getMisses).toHaveBeenCalled();
+    expect(paintSpy).toHaveBeenCalledWith(1, 1, "hit");
+    expect(paintSpy).toHaveBeenCalledWith(2, 2, "miss");
+
+    paintSpy.mockRestore();
   });
 
-  test("should correctly handle 'render ship' and 'attack result' events from EventBus", () => {
-    const renderShipCallback = EventBus.on.mock.calls.find(
-      (call) => call[0] === "render ship",
+  test("renderShips should paint all ship positions", () => {
+    const paintSpy = jest.spyOn(renderController, "paintCell").mockImplementation(() => {});
+    renderController.renderShips(mockBoard);
+
+    expect(mockBoard.getShips).toHaveBeenCalled();
+    expect(paintSpy).toHaveBeenCalledWith(3, 3, "ship");
+    expect(paintSpy).toHaveBeenCalledWith(4, 4, "ship");
+
+    paintSpy.mockRestore();
+  });
+
+  test("paintCell should modify the correct DOM element", () => {
+    document.body.innerHTML = `
+      <div class="gameboard">
+        <div data-col="5" data-row="5" class=""></div>
+      </div>
+    `;
+    renderController.paintCell(5, 5, "hit");
+
+    const cell = document.querySelector(`[data-col='5'][data-row='5']`);
+    expect(cell.classList.contains("hit")).toBe(true);
+  });
+
+  test("clearBoard should remove all classes from gameboard cells", () => {
+    document.body.innerHTML = `
+      <div class="gameboard">
+        <div class="ship" data-col="1" data-row="1"></div>
+        <div class="hit" data-col="2" data-row="2"></div>
+        <div class="miss" data-col="3" data-row="3"></div>
+      </div>
+    `;
+
+    renderController.clearBoard();
+
+    document.querySelectorAll(".gameboard > *").forEach((cell) => {
+      expect(cell.classList.contains("ship")).toBe(false);
+      expect(cell.classList.contains("hit")).toBe(false);
+      expect(cell.classList.contains("miss")).toBe(false);
+    });
+  });
+
+  test("should correctly handle EventBus callbacks for 'attack resolved' and 'turn updated'", () => {
+    const attackResolvedCallback = EventBus.on.mock.calls.find(
+      (call) => call[0] === "attack resolved",
     )[1];
-    const attackResultCallback = EventBus.on.mock.calls.find(
-      (call) => call[0] === "render attack",
+    const turnUpdatedCallback = EventBus.on.mock.calls.find(
+      (call) => call[0] === "turn updated",
     )[1];
 
-    const mockShip = {
-      getPositions: jest.fn(() => [{ x: 7, y: 8 }]),
-    };
-    renderShipCallback(mockShip);
-    expect(mockBoard.markShip).toHaveBeenCalledWith(7, 8);
+    const renderBoardSpy = jest.spyOn(renderController, "renderBoard");
+    const clearBoardSpy = jest.spyOn(renderController, "clearBoard");
 
-    attackResultCallback({ point: { x: 9, y: 10 }, result: "hit" });
-    expect(mockBoard.markHit).toHaveBeenCalledWith(9, 10);
+    attackResolvedCallback({ board: mockBoard });
+    expect(renderBoardSpy).toHaveBeenCalledWith(mockBoard);
+
+    turnUpdatedCallback({ board: mockBoard });
+    expect(clearBoardSpy).toHaveBeenCalled();
+    expect(renderBoardSpy).toHaveBeenCalledWith(mockBoard);
+
+    renderBoardSpy.mockRestore();
+    clearBoardSpy.mockRestore();
   });
 });
