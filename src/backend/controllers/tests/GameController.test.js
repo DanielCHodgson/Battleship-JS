@@ -52,6 +52,10 @@ describe("GameController", () => {
     expect(currentTurn.getBoard().getMisses()).toContainEqual({ x: 0, y: 0 });
   });
 
+  test("handleAttack should return null if already placed attack that turn", () => {
+    gameController.handleAttack({ x: 0, y: 1 }) === null;
+  });
+
   test("nextTurn should invert the current player and enemy board", () => {
     gameController.nextTurn();
     const turns = gameController.getTurns();

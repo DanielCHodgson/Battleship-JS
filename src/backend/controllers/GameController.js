@@ -20,10 +20,12 @@ export default class GameController {
 
   handleAttack(point) {
     const currentTurn = this.getCurrentTurn();
-    if (!currentTurn) return;
+
+    if (!currentTurn || currentTurn.hasAttacked()) return;
 
     const board = currentTurn.getBoard();
     const result = board.receiveAttack(point);
+    currentTurn.toggleAttackUsed();
 
     EventBus.emit("attack resolved", {
       board,

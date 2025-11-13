@@ -1,4 +1,3 @@
-import Ship from "../entities/Ship";
 import EventBus from "../utilities/EventBus";
 
 export default class Gameboard {
