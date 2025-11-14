@@ -33,15 +33,24 @@ export default class Gameboard {
       throw new Error("Attack is out of bounds");
     }
 
-    const hitShip = this.#ships.find((ship) => ship.isHit(point));
+    if (this.containsPoint(point)) {
+      return;
+    }
 
-    if (hitShip) {
+    if (this.#ships.find((ship) => ship.isHit(point))) {
       this.#hits.push(point);
-      return { point, result: "hit" };
+      return "hit";
     } else {
       this.#misses.push(point);
-      return { point, result: "miss" };
+      return "miss";
     }
+  }
+
+  containsPoint(point) {
+    return (
+      this.#hits.some((p) => p.x === point.x && p.y === point.y) ||
+      this.#misses.some((p) => p.x === point.x && p.y === point.y)
+    );
   }
 
   #isInBounds(point) {

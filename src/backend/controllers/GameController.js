@@ -20,18 +20,18 @@ export default class GameController {
 
   handleAttack(point) {
     const currentTurn = this.getCurrentTurn();
-
     if (!currentTurn || currentTurn.hasAttacked()) return;
-
     const board = currentTurn.getBoard();
     const result = board.receiveAttack(point);
-    currentTurn.toggleAttackUsed();
 
-    EventBus.emit("attack resolved", {
-      board,
-      point,
-      result: result.result,
-    });
+    if (result === "hit" || result === "miss") {
+      currentTurn.toggleAttackUsed();
+      EventBus.emit("attack resolved", {
+        board,
+        point,
+        result,
+      });
+    }
   }
 
   startGame() {
@@ -52,7 +52,7 @@ export default class GameController {
 
   nextTurn() {
     const currTurn = this.getCurrentTurn();
-    if (!currTurn) return;
+    if (!currTurn || !currTurn.hasAttacked()) return;
 
     const { player1, player2 } = this.#players;
     const nextPlayer = currTurn.getPlayer() === player1 ? player2 : player1;

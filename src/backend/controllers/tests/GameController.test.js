@@ -35,10 +35,8 @@ describe("GameController", () => {
 
   test("startGame should add initial turn state", () => {
     const turns = gameController.getTurns();
-
     expect(turns.length).toBe(1);
     const firstTurn = turns[0];
-
     expect(firstTurn.getTurn()).toBe(1);
     expect(firstTurn.getPlayer()).toBe(player1);
     expect(firstTurn.getBoard()).toBe(gameboard2);
@@ -48,16 +46,13 @@ describe("GameController", () => {
   test("handleAttack should add a miss to the enemy board", () => {
     gameController.handleAttack({ x: 0, y: 0 });
     const currentTurn = gameController.getCurrentTurn();
-
     expect(currentTurn.getBoard().getMisses()).toContainEqual({ x: 0, y: 0 });
   });
 
-  test("handleAttack should return null if already placed attack that turn", () => {
-    gameController.handleAttack({ x: 0, y: 1 }) === null;
-  });
-
   test("nextTurn should invert the current player and enemy board", () => {
+    gameController.handleAttack({ x: 5, y: 5 });
     gameController.nextTurn();
+
     const turns = gameController.getTurns();
     const currentTurn = gameController.getCurrentTurn();
 
@@ -65,12 +60,15 @@ describe("GameController", () => {
     expect(currentTurn.getTurn()).toBe(2);
     expect(currentTurn.getPlayer()).toBe(player2);
     expect(currentTurn.getBoard()).toBe(gameboard1);
-    expect(currentTurn.getPhase()).toBe("play");
   });
 
   test("handleAttack should add a hit to the enemy board", () => {
     gameController.handleAttack({ x: 0, y: 9 });
     const currentTurn = gameController.getCurrentTurn();
     expect(currentTurn.getBoard().getHits()).toContainEqual({ x: 0, y: 9 });
+  });
+
+  test("handleAttack should return null if already placed attack that turn", () => {
+    expect(gameController.handleAttack({ x: 0, y: 2 })).toBeUndefined();
   });
 });

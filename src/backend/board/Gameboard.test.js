@@ -34,18 +34,12 @@ describe("Gameboard", () => {
 
   test("an attack is placed on a point containing a ship", () => {
     gameboard.placeShip(ship, { x: 0, y: 0 }, "horizontal");
-    expect(gameboard.receiveAttack({ x: 0, y: 0 })).toStrictEqual({
-      point: { x: 0, y: 0 },
-      result: "hit",
-    });
+    expect(gameboard.receiveAttack({ x: 0, y: 0 })).toBe("hit");
   });
 
   test("an attack is placed on an empty point", () => {
     gameboard.placeShip(ship, { x: 0, y: 0 }, "horizontal");
-    expect(gameboard.receiveAttack({ x: 0, y: 1 })).toStrictEqual({
-      point: { x: 0, y: 1 },
-      result: "miss",
-    });
+    expect(gameboard.receiveAttack({ x: 0, y: 1 })).toBe("miss");
   });
 
   test("an attack is placed out of bounds", () => {
