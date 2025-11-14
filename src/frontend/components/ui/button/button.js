@@ -5,13 +5,17 @@ import "./button.css";
 
 export default class Button {
   #container;
+  #id;
   #name;
   #element;
 
-  constructor(container, name, eventName) {
+  constructor(container, id, label, eventName) {
     this.#container = container;
-    this.#name = name;
+    this.#id = id;
+    this.#name = label;
     this.#element = DomUtility.stringToHTML(htmlString);
+    this.#element.id = this.#id;
+    this.#element.textContent = this.#name;
     this.#registerEvent(eventName);
     this.render();
   }
@@ -25,7 +29,6 @@ export default class Button {
   }
 
   render() {
-    this.#element.textContent = this.#name;
     this.#container.appendChild(this.#element);
   }
 }

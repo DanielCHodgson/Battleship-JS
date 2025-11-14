@@ -34,10 +34,17 @@ export default class Gameboard {
     }
 
     if (this.containsPoint(point)) {
+      EventBus.emit("attack error", {
+        error: "Point already contains a marker",
+        point,
+      });
       return;
     }
 
-    if (this.#ships.find((ship) => ship.isHit(point))) {
+    const hitShip = this.#ships.find((ship) => ship.isHit(point));
+
+    if (hitShip) {
+      hitShip.hit();
       this.#hits.push(point);
       return "hit";
     } else {

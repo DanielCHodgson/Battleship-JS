@@ -20,8 +20,8 @@ let prevButton;
 function init() {
   hudComponent = new Hud(display);
   boardComponent = new BoardComponent(board);
-  nextButton = new Button(buttons, "Next Turn", "next turn");
-  nextButton = new Button(buttons, "Undo", "undo turn");
+  nextButton = new Button(buttons, "next", "Next Turn", "next turn");
+  nextButton = new Button(buttons, "undo", "Undo", "undo turn");
   renderController = new RenderController(boardComponent);
   gameController = new GameController();
   gameController.startGame();

@@ -21,16 +21,25 @@ export default class GameController {
   handleAttack(point) {
     const currentTurn = this.getCurrentTurn();
     if (!currentTurn || currentTurn.hasAttacked()) return;
+
     const board = currentTurn.getBoard();
     const result = board.receiveAttack(point);
 
-    if (result === "hit" || result === "miss") {
-      currentTurn.toggleAttackUsed();
-      EventBus.emit("attack resolved", {
-        board,
-        point,
-        result,
-      });
+    if (result !== "hit" && result !== "miss") {
+      return;
+    }
+
+    currentTurn.toggleAttackUsed();
+
+    EventBus.emit("attack resolved", {
+      board,
+      point,
+      result,
+    });
+
+    if (result === "hit" && board.getShips().every((ship) => ship.isSunk())) {
+      console.log("ended!");
+      this.endGame(currentTurn);
     }
   }
 
@@ -47,7 +56,6 @@ export default class GameController {
       state: firstTurn,
       board: firstTurn.getBoard(),
     });
-    return "game started!";
   }
 
   nextTurn() {
@@ -78,10 +86,8 @@ export default class GameController {
     EventBus.emit("turn restored", lastTurn);
   }
 
-  endGame() {
-    this.#turnStates = [];
-    this.#players = {};
-    EventBus.emit("game ended");
+  endGame(endState) {
+    EventBus.emit("game over", endState);
   }
 
   getTurns() {
@@ -100,21 +106,26 @@ export default class GameController {
   #initTestPlayers() {
     const player1 = new Player("Player1", false);
     const gameboard1 = player1.getGameboard();
+
+    /*
     gameboard1.placeShip(
       new Ship("destroyer", 4),
       { x: 0, y: 0 },
       "horizontal",
     );
-    gameboard1.placeShip(new Ship("tug", 4), { x: 5, y: 4 }, "vertical");
+    */
+    gameboard1.placeShip(new Ship("tug", 1), { x: 9, y: 0 }, "vertical");
 
     const player2 = new Player("Player2", false);
     const gameboard2 = player2.getGameboard();
+    /*
     gameboard2.placeShip(
       new Ship("destroyer", 4),
       { x: 0, y: 9 },
       "horizontal",
     );
-    gameboard2.placeShip(new Ship("tug", 4), { x: 9, y: 0 }, "vertical");
+    */
+    gameboard2.placeShip(new Ship("tug", 1), { x: 0, y: 0 }, "vertical");
 
     this.setPlayers(player1, player2);
   }

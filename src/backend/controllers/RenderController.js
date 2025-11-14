@@ -7,6 +7,7 @@ export default class RenderController {
       this.clearBoard();
       this.renderBoard(data.board);
     });
+    EventBus.on("game over", () => this.hideElement("#next"));
   }
 
   renderBoard(board) {
@@ -33,5 +34,11 @@ export default class RenderController {
     document
       .querySelectorAll(".gameboard > *")
       .forEach((cell) => cell.classList.remove("ship", "hit", "miss"));
+  }
+
+  hideElement(selector) {
+    const element = document.querySelector(selector);
+    if (!element) return;
+    element.style.display = "none";
   }
 }

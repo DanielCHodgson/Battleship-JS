@@ -23,19 +23,31 @@ export default class Hud {
   }
 
   #registerEvents() {
-    EventBus.on("square clicked", (square) => {
-      this.#fields.actionDisplay.textContent = `Selected (${square.x}, ${square.y})`;
-    });
-
     EventBus.on("turn updated", (data) => this.#printTurnInfo(data.state));
+    EventBus.on("attack resolved", (data) => this.#printAttackInfo(data));
+    EventBus.on("attack error", (data) => this.#printErrorInfo(data));
+    EventBus.on("game over", (turnState) => this.#printGameEndMessage(turnState));
   }
 
   #printTurnInfo(state) {
-    this.#fields.turnDisplay.textContent =
-    `
+    this.#fields.actionDisplay.textContent = "";
+    this.#fields.turnDisplay.textContent = `
     Turn: ${state.getTurn()} |
     Active player: ${state.getPlayer().getName()}
     `;
+  }
+
+  #printAttackInfo(data) {
+    const { point, result } = data;
+    this.#fields.actionDisplay.textContent = `Attacked (${point.x},${point.y}) resulting in a ${result}`;
+  }
+
+  #printErrorInfo(data) {
+    this.#fields.actionDisplay.textContent = data.error;
+  }
+
+  #printGameEndMessage(turnState) {
+    this.#fields.actionDisplay.textContent = `Game Over! ${turnState.getPlayer().getName()} won in ${turnState.getTurn()} turns!`;
   }
 
   render() {
