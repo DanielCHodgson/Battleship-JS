@@ -2,10 +2,14 @@ import EventBus from "../utilities/EventBus";
 
 export default class RenderController {
   constructor() {
-    EventBus.on("attack resolved", (data) => this.renderBoard(data.board));
-    EventBus.on("turn updated", (data) => {
+    EventBus.on("attack resolved", (attack) => this.renderBoard(attack.board));
+    EventBus.on("turn state updated", (state) => {
       this.clearBoard();
-      this.renderBoard(data.board);
+      this.renderBoard(state.getBoard());
+    });
+    EventBus.on("turn restored", (state) => {
+      this.clearBoard();
+      this.renderBoard(state.getBoard());
     });
     EventBus.on("game over", () => this.hideElement("#next"));
   }

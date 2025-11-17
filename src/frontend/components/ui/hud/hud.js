@@ -23,7 +23,7 @@ export default class Hud {
   }
 
   #registerEvents() {
-    EventBus.on("turn updated", (data) => this.#printTurnInfo(data.state));
+    EventBus.on("turn state updated", (state) => this.#printTurnInfo(state));
     EventBus.on("attack resolved", (data) => this.#printAttackInfo(data));
     EventBus.on("attack error", (data) => this.#printErrorInfo(data));
     EventBus.on("game over", (turnState) => this.#printGameEndMessage(turnState));
