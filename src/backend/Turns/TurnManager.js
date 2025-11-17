@@ -11,7 +11,7 @@ export default class TurnManager {
 
   firstTurn() {
     const { player1, player2 } = this.#gameController.getPlayers();
-    const firstTurn = new TurnState(1, player1, player2.getGameboard(), "play");
+    const firstTurn = new TurnState(1, player1, player2.getGameboard());
     this.#turnStates.push(firstTurn);
     EventBus.emit("turn state updated", firstTurn);
   }
@@ -19,8 +19,7 @@ export default class TurnManager {
   nextTurn() {
     const currTurn = this.getCurrentTurnState();
     if (!currTurn || !currTurn.hasAttacked()) return;
-
-    const newTurn = this.buildNextTurn(currTurn);
+    const newTurn = this.#buildNextTurn(currTurn);
     this.#turnStates.push(newTurn);
     EventBus.emit("turn state updated", newTurn);
   }
@@ -32,18 +31,10 @@ export default class TurnManager {
     EventBus.emit("turn restored", prevTurn);
   }
 
-  buildNextTurn(currentTurn) {
+  #buildNextTurn(currTurn) {
     const { player1, player2 } = this.#gameController.getPlayers();
-    const nextPlayer = currentTurn.getPlayer() === player1 ? player2 : player1;
-
-    const newTurn = new TurnState(
-      currentTurn.getTurn() + 1,
-      nextPlayer,
-      currentTurn.getPlayer().getGameboard(),
-      "play",
-    );
-
-    return newTurn;
+    const nextPlayer = currTurn.getPlayer() === player1 ? player2 : player1;
+    return new TurnState(this.getTurnNumber() + 1, nextPlayer, currTurn.getPlayer().getGameboard());
   }
 
   getCurrentTurnState() {
@@ -52,10 +43,6 @@ export default class TurnManager {
 
   getTurnNumber() {
     return this.#turnStates.length;
-  }
-
-  getRoundNumber() {
-    return Math.ceil(this.#turnStates.length / 2);
   }
 
   getTurnStates() {

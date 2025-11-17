@@ -1,28 +1,17 @@
 export default class TurnState {
-  #turn;
+  #round;
   #currPlayer;
   #enemyBoard;
-  #phase;
-  #attackUsed;
+  #attackUsed = false;
 
-  constructor(turn, currentPlayer, enemyBoard, phase) {
-    this.#turn = turn;
-    this.#currPlayer = currentPlayer;
+  constructor(round, currPlayer, enemyBoard) {
+    this.#round = round;
+    this.#currPlayer = currPlayer;
     this.#enemyBoard = enemyBoard;
-    this.#phase = phase;
-    this.#attackUsed = false;
   }
 
-  getTurn() {
-    return this.#turn;
-  }
-
-  hasAttacked() {
-    return this.#attackUsed;
-  }
-
-  toggleAttackUsed() {
-    this.#attackUsed = !this.#attackUsed;
+  getRound() {
+    return this.#round;
   }
 
   getPlayer() {
@@ -33,7 +22,11 @@ export default class TurnState {
     return this.#enemyBoard;
   }
 
-  getPhase() {
-    return this.#phase;
+  hasAttacked() {
+    return this.#attackUsed;
+  }
+
+  markAttackDone() {
+    this.#attackUsed = true;
   }
 }

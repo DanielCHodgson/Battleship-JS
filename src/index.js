@@ -23,7 +23,7 @@ function init() {
   renderController = new RenderController(boardComponent);
   gameController = new GameController();
   nextButton = new Button(buttons, "next", "Next Turn", "next turn");
-  prevButton = new Button(buttons, "prev", "Prev Turn", "prev turn");
+  prevButton = new Button(buttons, "undo", "Undo", "undo");
   gameController.startGame();
 }
 

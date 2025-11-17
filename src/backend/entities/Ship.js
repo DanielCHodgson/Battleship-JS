@@ -35,6 +35,10 @@ export default class Ship {
     return this.#name;
   }
 
+  getHits() {
+    return this.#hits;
+  }
+
   setPositions(positions) {
     this.#positions = positions;
   }

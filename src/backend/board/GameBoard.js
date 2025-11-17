@@ -19,7 +19,7 @@ export default class Gameboard {
         : positions.push({ x: point.x, y: point.y + i });
     }
 
-    if (!positions.every((position) => this.#isInBounds(position))) {
+    if (!positions.every((pos) => this.#isInBounds(pos))) {
       throw new Error("Ship not wholly in bounds");
     }
 
@@ -30,7 +30,7 @@ export default class Gameboard {
 
   receiveAttack(point) {
     if (!this.#isInBounds(point)) {
-      throw new Error("Attack is out of bounds");
+      throw new Error("Attack out of bounds");
     }
 
     if (this.containsPoint(point)) {
@@ -45,10 +45,10 @@ export default class Gameboard {
 
     if (hitShip) {
       hitShip.hit();
-      this.#hits.push(point);
+      this.#hits.push({ ...point });
       return "hit";
     } else {
-      this.#misses.push(point);
+      this.#misses.push({ ...point });
       return "miss";
     }
   }
@@ -72,12 +72,30 @@ export default class Gameboard {
   getShips() {
     return this.#ships;
   }
+  setShips(list) {
+    this.#ships = list;
+  }
 
   getHits() {
     return this.#hits;
   }
 
+  setHits(count) {
+    this.#hits = count;
+  }
+
   getMisses() {
     return this.#misses;
+  }
+  setMisses(list) {
+    this.#misses = list;
+  }
+
+  clone() {
+    const copy = new Gameboard(this.#size);
+    copy.#hits = structuredClone(this.#hits);
+    copy.#misses = structuredClone(this.#misses);
+    copy.#ships = this.#ships.map((ship) => ship.clone());
+    return copy;
   }
 }

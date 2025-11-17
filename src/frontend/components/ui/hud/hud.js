@@ -32,7 +32,7 @@ export default class Hud {
   #printTurnInfo(state) {
     this.#fields.actionDisplay.textContent = "";
     this.#fields.turnDisplay.textContent = `
-    Turn: ${state.getTurn()} |
+    Turn: ${state.getRound()} |
     Active player: ${state.getPlayer().getName()}
     `;
   }
@@ -47,7 +47,7 @@ export default class Hud {
   }
 
   #printGameEndMessage(turnState) {
-    this.#fields.actionDisplay.textContent = `Game Over! ${turnState.getPlayer().getName()} won in ${turnState.getTurn()} turns!`;
+    this.#fields.actionDisplay.textContent = `Game Over! ${turnState.getPlayer().getName()} won in ${turnState.getRound()} turns!`;
   }
 
   render() {
