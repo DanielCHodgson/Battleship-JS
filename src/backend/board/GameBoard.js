@@ -53,6 +53,17 @@ export default class Gameboard {
     }
   }
 
+  revertAttack(point, wasHit, shipHit) {
+    if (wasHit) {
+      shipHit.restoreHealth();
+    }
+
+    this.#hits = this.#hits.filter((p) => p.x !== point.x || p.y !== point.y);
+    this.#misses = this.#misses.filter(
+      (p) => p.x !== point.x || p.y !== point.y,
+    );
+  }
+
   containsPoint(point) {
     return (
       this.#hits.some((p) => p.x === point.x && p.y === point.y) ||
@@ -71,6 +82,10 @@ export default class Gameboard {
 
   getShips() {
     return this.#ships;
+  }
+
+  getShipAt(point) {
+    return this.#ships.find((ship) => ship.isHit(point)) || null;
   }
   setShips(list) {
     this.#ships = list;

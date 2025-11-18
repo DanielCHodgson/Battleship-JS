@@ -23,6 +23,12 @@ export default class Ship {
     return this.#hits >= this.#length;
   }
 
+  restoreHealth() {
+    if (this.#hits > 0) {
+      this.#hits--;
+    }
+  }
+
   getLength() {
     return this.#length;
   }
@@ -41,5 +47,12 @@ export default class Ship {
 
   setPositions(positions) {
     this.#positions = positions;
+  }
+
+  clone() {
+    const clonedShip = new Ship(this.#name, this.#length);
+    clonedShip.#positions = this.#positions.map((pos) => ({ ...pos }));
+    clonedShip.#hits = this.#hits;
+    return clonedShip;
   }
 }

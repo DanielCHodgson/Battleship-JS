@@ -23,17 +23,19 @@ export default class Hud {
   }
 
   #registerEvents() {
-    EventBus.on("turn state updated", (state) => this.#printTurnInfo(state));
+    EventBus.on("turn state updated", (turnState) => this.#printTurnInfo(turnState));
+    EventBus.on("turn advanced", (turnState) => this.#printTurnInfo(turnState));
     EventBus.on("attack resolved", (data) => this.#printAttackInfo(data));
+    EventBus.on("turn restored", (turnState) => this.#printTurnInfo(turnState));
     EventBus.on("attack error", (data) => this.#printErrorInfo(data));
     EventBus.on("game over", (turnState) => this.#printGameEndMessage(turnState));
   }
 
-  #printTurnInfo(state) {
+  #printTurnInfo(turnState) {
     this.#fields.actionDisplay.textContent = "";
     this.#fields.turnDisplay.textContent = `
-    Turn: ${state.getRound()} |
-    Active player: ${state.getPlayer().getName()}
+    Turn: ${turnState.getRound()} |
+    Active player: ${turnState.getPlayer().getName()}
     `;
   }
 
@@ -46,8 +48,8 @@ export default class Hud {
     this.#fields.actionDisplay.textContent = data.error;
   }
 
-  #printGameEndMessage(turnState) {
-    this.#fields.actionDisplay.textContent = `Game Over! ${turnState.getPlayer().getName()} won in ${turnState.getRound()} turns!`;
+  #printGameEndMessage(turnturnState) {
+    this.#fields.actionDisplay.textContent = `Game Over! ${turnturnState.getPlayer().getName()} won in ${turnturnState.getRound()} turns!`;
   }
 
   render() {

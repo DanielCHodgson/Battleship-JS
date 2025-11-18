@@ -30,31 +30,29 @@ export default class GameController {
     this.#turnManager.firstTurn();
   }
 
-  executeCommand(command) {
-    command.execute();
-    this.#commandHistory.push(command);
-  }
-
-  undoLastCommand() {
-    const command = this.#commandHistory.pop();
-    if (command) command.undo();
-  }
-
   handleAttack(point) {
     const currentTurn = this.#turnManager.getCurrentTurnState();
     if (!currentTurn || currentTurn.hasAttacked()) return;
 
     const enemyBoard = currentTurn.getBoard();
-    const result = this.executeCommand(new AttackCommand(enemyBoard, point));
-    currentTurn.markAttackDone();
+    const result = this.executeCommand(new AttackCommand(currentTurn, point));
 
     if (result === "hit" && this.gameIsWon(enemyBoard)) {
       this.endGame(currentTurn);
     }
   }
 
-  undoAttack(point, wasHit, shipHit) {
-    //to do - update ship class with a "removeHit(point)" method
+  executeCommand(command) {
+    const result = command.execute();
+    if (result !== false) {
+      this.#commandHistory.push(command);
+    }
+    return result;
+  }
+
+  undoLastCommand() {
+    const command = this.#commandHistory.pop();
+    if (command) command.undo();
   }
 
   gameIsWon(board) {

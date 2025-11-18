@@ -1,32 +1,47 @@
 export default class TurnState {
-  #round;
+  #index;
   #currPlayer;
-  #enemyBoard;
+  #enemyPlayer;
   #attackUsed = false;
 
-  constructor(round, currPlayer, enemyBoard) {
-    this.#round = round;
+  constructor(index, currPlayer, enemyPlayer) {
+    this.#index = index;
     this.#currPlayer = currPlayer;
-    this.#enemyBoard = enemyBoard;
+    this.#enemyPlayer = enemyPlayer;
   }
 
+  getIndex() {
+    return this.#index;
+  }
   getRound() {
-    return this.#round;
+    return Math.ceil(this.#index / 2);
   }
 
   getPlayer() {
     return this.#currPlayer;
   }
+  getEnemyPlayer() {
+    return this.#enemyPlayer;
+  }
 
   getBoard() {
-    return this.#enemyBoard;
+    return this.#enemyPlayer.getGameboard();
   }
 
   hasAttacked() {
     return this.#attackUsed;
   }
-
   markAttackDone() {
     this.#attackUsed = true;
+  }
+  markAttackUndone() {
+    this.#attackUsed = false;
+  }
+
+  getAttackState() {
+    return this.#attackUsed;
+  }
+  setAttackState(value) {
+    this.#attackUsed = value;
   }
 }
