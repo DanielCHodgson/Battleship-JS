@@ -33,7 +33,7 @@ export default class Gameboard {
       throw new Error("Attack out of bounds");
     }
 
-    if (this.containsPoint(point)) {
+    if (this.pointIsOccupied(point)) {
       EventBus.emit("attack error", {
         error: "Point already contains a marker",
         point,
@@ -41,7 +41,7 @@ export default class Gameboard {
       return;
     }
 
-    const hitShip = this.#ships.find((ship) => ship.isHit(point));
+    const hitShip = this.#ships.find((ship) => ship.collides(point));
 
     if (hitShip) {
       hitShip.hit();
@@ -53,18 +53,18 @@ export default class Gameboard {
     }
   }
 
-  revertAttack(point, wasHit, shipHit) {
-    if (wasHit) {
+  revertAttack(point, didHit, shipHit) {
+    const pointList = didHit ? this.#hits : this.#misses;
+
+    if (didHit) {
       shipHit.restoreHealth();
     }
 
-    this.#hits = this.#hits.filter((p) => p.x !== point.x || p.y !== point.y);
-    this.#misses = this.#misses.filter(
-      (p) => p.x !== point.x || p.y !== point.y,
-    );
+    const filtered = pointList.filter((p) => p.x !== point.x || p.y !== point.y);
+    didHit ? (this.#hits = filtered) : (this.#misses = filtered);
   }
 
-  containsPoint(point) {
+  pointIsOccupied(point) {
     return (
       this.#hits.some((p) => p.x === point.x && p.y === point.y) ||
       this.#misses.some((p) => p.x === point.x && p.y === point.y)
@@ -85,7 +85,7 @@ export default class Gameboard {
   }
 
   getShipAt(point) {
-    return this.#ships.find((ship) => ship.isHit(point)) || null;
+    return this.#ships.find((ship) => ship.collides(point)) || null;
   }
   setShips(list) {
     this.#ships = list;

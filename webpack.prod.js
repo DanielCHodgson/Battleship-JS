@@ -4,15 +4,16 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 module.exports = merge(common, {
   mode: "production",
-  devtool: "source-map",
+
   module: {
     rules: [
       {
-        test: /\.css$/,
+        test: /\.css$/i,
         use: [MiniCssExtractPlugin.loader, "css-loader"],
       },
     ],
   },
+
   plugins: [
     new MiniCssExtractPlugin({
       filename: "[name].[contenthash].css",

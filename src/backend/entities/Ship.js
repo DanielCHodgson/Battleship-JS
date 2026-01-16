@@ -13,7 +13,7 @@ export default class Ship {
     this.#hits++;
   }
 
-  isHit(point) {
+  collides(point) {
     return this.#positions.some(
       (pos) => pos.x === point.x && pos.y === point.y,
     );

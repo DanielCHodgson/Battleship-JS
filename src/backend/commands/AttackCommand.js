@@ -2,7 +2,6 @@ import EventBus from "../utilities/EventBus";
 export default class AttackCommand {
   #turnState;
   #point;
-
   #wasHit = false;
   #shipHit = null;
 
