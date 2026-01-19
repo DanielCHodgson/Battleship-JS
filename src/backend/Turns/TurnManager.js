@@ -1,4 +1,3 @@
-import EventBus from "../utilities/EventBus";
 import TurnState from "./TurnState";
 
 export default class TurnManager {
@@ -9,28 +8,22 @@ export default class TurnManager {
     this.#gameController = gameController;
   }
 
-  firstTurn() {
+  initialize() {
     const { player1, player2 } = this.#gameController.getPlayers();
-    const firstTurn = new TurnState(1, player1, player2);
-    this.#turnStates.push(firstTurn);
-    EventBus.emit("turn state updated", firstTurn);
+    this.#turnStates = [new TurnState(1, player1, player2)];
   }
 
   nextTurn() {
     const currTurn = this.getCurrentTurnState();
-    if (!currTurn || !currTurn.hasAttacked()) return false;
+    if (!currTurn?.hasAttacked()) return false;
 
-    const newTurn = this.#buildNextTurn(currTurn);
-    this.#turnStates.push(newTurn);
-    EventBus.emit("turn advanced", newTurn);
+    this.#turnStates.push(this.#buildNextTurn(currTurn));
     return true;
   }
 
   previousTurn() {
     if (this.#turnStates.length <= 1) return false;
     this.#turnStates.pop();
-    const prevTurn = this.getCurrentTurnState();
-    if (prevTurn) EventBus.emit("turn restored", prevTurn);
     return true;
   }
 
@@ -48,9 +41,5 @@ export default class TurnManager {
 
   getTurnNumber() {
     return this.#turnStates.length;
-  }
-
-  getTurnStates() {
-    return this.#turnStates;
   }
 }

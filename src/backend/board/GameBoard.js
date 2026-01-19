@@ -2,12 +2,15 @@ import EventBus from "../utilities/EventBus";
 
 export default class Gameboard {
   #size;
-  #misses = [];
-  #hits = [];
-  #ships = [];
+  #misses;
+  #hits;
+  #ships;
 
   constructor(size = 10) {
     this.#size = size;
+    this.#misses = [];
+    this.#hits = [];
+    this.#ships = [];
   }
 
   placeShip(ship, point, direction = "horizontal") {
@@ -60,7 +63,9 @@ export default class Gameboard {
       shipHit.restoreHealth();
     }
 
-    const filtered = pointList.filter((p) => p.x !== point.x || p.y !== point.y);
+    const filtered = pointList.filter(
+      (p) => p.x !== point.x || p.y !== point.y,
+    );
     didHit ? (this.#hits = filtered) : (this.#misses = filtered);
   }
 

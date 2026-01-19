@@ -12,11 +12,12 @@ body {
 }
 
 .game {
+  padding: 1rem 0;
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 5rem;
+  grid-template-columns: 2fr 2fr 1fr;
+  gap: 1rem;
 }
 .board {
   justify-self: end;

@@ -13,6 +13,7 @@ export default class TurnState {
   getIndex() {
     return this.#index;
   }
+
   getRound() {
     return Math.ceil(this.#index / 2);
   }
@@ -20,28 +21,28 @@ export default class TurnState {
   getPlayer() {
     return this.#currPlayer;
   }
+
   getEnemyPlayer() {
     return this.#enemyPlayer;
   }
+  
+  getPlayerBoard() {
+    return this.#currPlayer.getGameboard();
+  }
 
-  getBoard() {
+  getTargetBoard() {
     return this.#enemyPlayer.getGameboard();
   }
 
   hasAttacked() {
     return this.#attackUsed;
   }
+
   markAttackDone() {
     this.#attackUsed = true;
   }
+
   markAttackUndone() {
     this.#attackUsed = false;
-  }
-
-  getAttackState() {
-    return this.#attackUsed;
-  }
-  setAttackState(value) {
-    this.#attackUsed = value;
   }
 }

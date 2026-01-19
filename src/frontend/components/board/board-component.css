@@ -9,8 +9,13 @@
   outline: 1px solid #333;
 }
 
+.board1 {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
 .square {
- background-color: #95ddda;
+  background-color: #95ddda;
   border: 1px solid #333;
   display: flex;
   justify-content: center;
@@ -33,4 +38,17 @@
 }
 .square.miss {
   background-color: #000000;
+}
+
+.square.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.player-board .gameboard {
+  opacity: 0.9;
+}
+
+.enemy-board .gameboard {
+  border: 2px solid red;
 }

@@ -8,48 +8,61 @@ export default class Hud {
   #container;
   #element;
   #fields = {};
+  #lastTurnIndex = null;
 
   constructor(container) {
     this.#container = container;
     this.#element = DomUtility.stringToHTML(htmlString);
-    this.#casheFields();
+    this.#cacheFields();
     this.#registerEvents();
     this.render();
   }
 
-  #casheFields() {
-    this.#fields.actionDisplay = this.#element.querySelector(".action-display");
-    this.#fields.turnDisplay = this.#element.querySelector(".turn-display");
+  #cacheFields() {
+    this.#fields.actionDisplay =
+      this.#element.querySelector(".action-display");
+    this.#fields.turnDisplay =
+      this.#element.querySelector(".turn-display");
   }
 
   #registerEvents() {
-    EventBus.on("turn state updated", (turnState) => this.#printTurnInfo(turnState));
-    EventBus.on("turn advanced", (turnState) => this.#printTurnInfo(turnState));
-    EventBus.on("attack resolved", (data) => this.#printAttackInfo(data));
-    EventBus.on("turn restored", (turnState) => this.#printTurnInfo(turnState));
-    EventBus.on("attack error", (data) => this.#printErrorInfo(data));
-    EventBus.on("game over", (turnState) => this.#printGameEndMessage(turnState));
+    EventBus.on("state changed", (state) => this.renderState(state));
   }
 
-  #printTurnInfo(turnState) {
-    this.#fields.actionDisplay.textContent = "";
-    this.#fields.turnDisplay.textContent = `
-    Turn: ${turnState.getRound()} |
-    Active player: ${turnState.getPlayer().getName()}
-    `;
+  renderState({ turn, phase }) {
+    if (!turn) return;
+
+    this.#renderTurnInfo(turn);
+    this.#renderActionInfo(turn);
+
+    if (phase === "gameover") {
+      this.#renderGameEnd(turn);
+    }
   }
 
-  #printAttackInfo(data) {
-    const { point, result } = data;
-    this.#fields.actionDisplay.textContent = `Attacked (${point.x},${point.y}) resulting in a ${result}`;
+  #renderTurnInfo(turn) {
+    this.#fields.turnDisplay.textContent =
+      `Turn: ${turn.getRound()} | ` +
+      `Active player: ${turn.getPlayer().getName()}`;
   }
 
-  #printErrorInfo(data) {
-    this.#fields.actionDisplay.textContent = data.error;
+  #renderActionInfo(turn) {
+    if (turn.getIndex() !== this.#lastTurnIndex) {
+      this.#fields.actionDisplay.textContent = "";
+      this.#lastTurnIndex = turn.getIndex();
+      return;
+    }
+
+    if (turn.hasAttacked()) {
+      this.#fields.actionDisplay.textContent =
+        `${turn.getPlayer().getName()} has attacked`;
+    }
   }
 
-  #printGameEndMessage(turnturnState) {
-    this.#fields.actionDisplay.textContent = `Game Over! ${turnturnState.getPlayer().getName()} won in ${turnturnState.getRound()} turns!`;
+  #renderGameEnd(turn) {
+    this.#fields.actionDisplay.textContent =
+      `Game Over! ${turn.getPlayer().getName()} ` +
+      `won in ${turn.getRound()} turns!`;
   }
 
   render() {
