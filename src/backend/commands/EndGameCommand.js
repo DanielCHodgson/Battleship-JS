@@ -1,17 +1,20 @@
 import EventBus from "../utilities/EventBus";
 
 export default class EndGameCommand {
-  #state;
+  #gameController;
+  #prevPhase;
 
-  constructor(state) {
-    this.#state = state;
+  constructor(gameController) {
+    this.#gameController = gameController;
   }
 
   execute() {
-    EventBus.emit("game over", this.#state);
+    this.#prevPhase = this.#gameController.getPhase();
+    this.#gameController.setPhase("gameover");
+    return true;
   }
 
   undo() {
-    EventBus.emit("game resumed", this.#state);
+    this.#gameController.setPhase(this.#prevPhase);
   }
 }

@@ -5,6 +5,7 @@ import TurnManager from "../Turns/TurnManager";
 import GameState from "../Turns/GameState";
 import NextTurnCommand from "../commands/NextTurnCommand";
 import AttackCommand from "../commands/AttackCommand";
+import EndGameCommand from "../commands/EndGameCommand";
 
 export default class GameController {
   #players = {};
@@ -19,9 +20,11 @@ export default class GameController {
 
   #registerEvents() {
     EventBus.on("attack attempted", (point) => this.handleAttack(point));
-    EventBus.on("next turn", () =>
-      this.executeCommand(new NextTurnCommand(this.#turnManager)),
-    );
+    EventBus.on("next turn", () => {
+      if (this.#phase === "playing") {
+        this.executeCommand(new NextTurnCommand(this.#turnManager));
+      }
+    });
     EventBus.on("undo", () => this.undoLastCommand());
   }
 
@@ -34,6 +37,8 @@ export default class GameController {
   }
 
   handleAttack(point) {
+    if (this.#phase !== "playing") return;
+
     const currentTurnState = this.#turnManager.getCurrentTurn();
     if (!currentTurnState || currentTurnState.hasAttacked()) return;
 
@@ -43,8 +48,7 @@ export default class GameController {
     );
 
     if (result === "hit" && this.gameIsWon(enemyBoard)) {
-      this.#phase = "gameover";
-      this.emitState();
+      this.executeCommand(new EndGameCommand(this));
     }
   }
 
@@ -85,6 +89,14 @@ export default class GameController {
 
   getPlayers() {
     return this.#players;
+  }
+
+  getPhase() {
+    return this.#phase;
+  }
+
+  setPhase(phase) {
+    this.#phase = phase;
   }
 
   #initTestPlayers() {
