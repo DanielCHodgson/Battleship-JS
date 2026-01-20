@@ -2,6 +2,7 @@ import Player from "../entities/Player";
 import Ship from "../entities/Ship";
 import EventBus from "../utilities/EventBus";
 import TurnManager from "../Turns/TurnManager";
+import GameState from "../Turns/GameState";
 import NextTurnCommand from "../commands/NextTurnCommand";
 import AttackCommand from "../commands/AttackCommand";
 
@@ -18,7 +19,9 @@ export default class GameController {
 
   #registerEvents() {
     EventBus.on("attack attempted", (point) => this.handleAttack(point));
-    EventBus.on("next turn", () => this.executeCommand(new NextTurnCommand(this.#turnManager)));
+    EventBus.on("next turn", () =>
+      this.executeCommand(new NextTurnCommand(this.#turnManager)),
+    );
     EventBus.on("undo", () => this.undoLastCommand());
   }
 
@@ -31,11 +34,13 @@ export default class GameController {
   }
 
   handleAttack(point) {
-    const currentTurnState = this.#turnManager.getCurrentTurnState();
+    const currentTurnState = this.#turnManager.getCurrentTurn();
     if (!currentTurnState || currentTurnState.hasAttacked()) return;
 
     const enemyBoard = currentTurnState.getTargetBoard();
-    const result = this.executeCommand(new AttackCommand(currentTurnState, point));
+    const result = this.executeCommand(
+      new AttackCommand(currentTurnState, point),
+    );
 
     if (result === "hit" && this.gameIsWon(enemyBoard)) {
       this.#phase = "gameover";
@@ -60,11 +65,14 @@ export default class GameController {
   }
 
   emitState() {
-    EventBus.emit("state changed", {
-      turn: this.#turnManager.getCurrentTurnState(),
-      turnNumber: this.#turnManager.getTurnNumber(),
-      phase: this.#phase,
-    });
+    EventBus.emit(
+      "state changed",
+      new GameState({
+        turn: this.#turnManager.getCurrentTurn(),
+        turnNumber: this.#turnManager.getTurnNumber(),
+        phase: this.#phase,
+      }),
+    );
   }
 
   gameIsWon(board) {
@@ -81,18 +89,14 @@ export default class GameController {
 
   #initTestPlayers() {
     const player1 = new Player("Player1", false);
-    player1.getGameboard().placeShip(
-      new Ship("tug", 1),
-      { x: 9, y: 0 },
-      "vertical"
-    );
+    player1
+      .getGameboard()
+      .placeShip(new Ship("tug", 1), { x: 9, y: 0 }, "vertical");
 
     const player2 = new Player("Player2", false);
-    player2.getGameboard().placeShip(
-      new Ship("tug", 1),
-      { x: 0, y: 0 },
-      "vertical"
-    );
+    player2
+      .getGameboard()
+      .placeShip(new Ship("tug", 1), { x: 0, y: 0 }, "vertical");
 
     this.setPlayers(player1, player2);
   }

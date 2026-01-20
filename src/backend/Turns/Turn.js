@@ -1,4 +1,4 @@
-export default class TurnState {
+export default class Turn {
   #index;
   #currPlayer;
   #enemyPlayer;

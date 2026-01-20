@@ -8,21 +8,19 @@ export default class Hud {
   #container;
   #element;
   #fields = {};
-  #lastTurnIndex = null;
 
   constructor(container) {
     this.#container = container;
     this.#element = DomUtility.stringToHTML(htmlString);
+
     this.#cacheFields();
     this.#registerEvents();
     this.render();
   }
 
   #cacheFields() {
-    this.#fields.actionDisplay =
-      this.#element.querySelector(".action-display");
-    this.#fields.turnDisplay =
-      this.#element.querySelector(".turn-display");
+    this.#fields.actionDisplay = this.#element.querySelector(".action-display");
+    this.#fields.turnDisplay = this.#element.querySelector(".turn-display");
   }
 
   #registerEvents() {
@@ -32,37 +30,30 @@ export default class Hud {
   renderState({ turn, phase }) {
     if (!turn) return;
 
-    this.#renderTurnInfo(turn);
-    this.#renderActionInfo(turn);
-
-    if (phase === "gameover") {
-      this.#renderGameEnd(turn);
-    }
+    this.renderTurnInfo(turn);
+    this.renderActionInfo(turn, phase);
   }
 
-  #renderTurnInfo(turn) {
+  renderTurnInfo(turn) {
     this.#fields.turnDisplay.textContent =
       `Turn: ${turn.getRound()} | ` +
       `Active player: ${turn.getPlayer().getName()}`;
   }
 
-  #renderActionInfo(turn) {
-    if (turn.getIndex() !== this.#lastTurnIndex) {
-      this.#fields.actionDisplay.textContent = "";
-      this.#lastTurnIndex = turn.getIndex();
+  renderActionInfo(turn, phase) {
+    if (phase === "gameover") {
+      this.#fields.actionDisplay.textContent =
+        `Game Over! ${turn.getPlayer().getName()} ` +
+        `won in ${turn.getRound()} turns!`;
       return;
     }
 
     if (turn.hasAttacked()) {
-      this.#fields.actionDisplay.textContent =
-        `${turn.getPlayer().getName()} has attacked`;
+      this.#fields.actionDisplay.textContent = `${turn.getPlayer().getName()} has attacked`;
+      return;
     }
-  }
 
-  #renderGameEnd(turn) {
-    this.#fields.actionDisplay.textContent =
-      `Game Over! ${turn.getPlayer().getName()} ` +
-      `won in ${turn.getRound()} turns!`;
+    this.#fields.actionDisplay.textContent = "";
   }
 
   render() {

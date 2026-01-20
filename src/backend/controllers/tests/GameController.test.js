@@ -1,7 +1,6 @@
 import GameController from "../GameController";
 import Player from "../../entities/Player";
 import Ship from "../../entities/Ship";
-import TurnState from "../../state/TurnState";
 
 describe("GameController", () => {
   let gameController;

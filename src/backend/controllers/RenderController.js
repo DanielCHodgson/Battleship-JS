@@ -23,11 +23,10 @@ export default class RenderController {
     return cells;
   }
 
-  render({ turn, phase }) {
-    if (!turn) return;
-
+  render(state) {
+    const turn = state.getTurn();
     this.renderPlayerBoard(turn.getPlayerBoard());
-    this.renderEnemyBoard(turn.getTargetBoard(), phase, turn.hasAttacked());
+    this.renderEnemyBoard(turn.getTargetBoard(), state.getPhase(), turn.hasAttacked());
   }
 
   renderPlayerBoard(board) {
@@ -36,7 +35,6 @@ export default class RenderController {
     board.getShips().forEach((ship) =>
       ship.getPositions().forEach(({ x, y }) => {
         this.paintCell(this.#playerCells, x, y, "ship");
-        console.log(x + ":" + y);
       }),
     );
     board
@@ -58,12 +56,7 @@ export default class RenderController {
       .forEach(({ x, y }) => this.paintCell(this.#enemyCells, x, y, "miss"));
   }
 
-
   paintCell(cellMap, x, y, type) {
-    console.log(cellMap);
-    console.log(x);
-    console.log(y);
-
     const cell = cellMap.get(`${x},${y}`);
     if (!cell) return;
 

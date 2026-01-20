@@ -1,8 +1,8 @@
-import TurnState from "./TurnState";
+import Turn from "./Turn";
 
 export default class TurnManager {
   #gameController;
-  #turnStates = [];
+  #turns = [];
 
   constructor(gameController) {
     this.#gameController = gameController;
@@ -10,20 +10,20 @@ export default class TurnManager {
 
   initialize() {
     const { player1, player2 } = this.#gameController.getPlayers();
-    this.#turnStates = [new TurnState(1, player1, player2)];
+    this.#turns = [new Turn(1, player1, player2)];
   }
 
   nextTurn() {
-    const currTurn = this.getCurrentTurnState();
+    const currTurn = this.getCurrentTurn();
     if (!currTurn?.hasAttacked()) return false;
 
-    this.#turnStates.push(this.#buildNextTurn(currTurn));
+    this.#turns.push(this.#buildNextTurn(currTurn));
     return true;
   }
 
   previousTurn() {
-    if (this.#turnStates.length <= 1) return false;
-    this.#turnStates.pop();
+    if (this.#turns.length <= 1) return false;
+    this.#turns.pop();
     return true;
   }
 
@@ -32,14 +32,14 @@ export default class TurnManager {
     const nextPlayer = currTurn.getPlayer() === player1 ? player2 : player1;
     const nextEnemy = nextPlayer === player1 ? player2 : player1;
 
-    return new TurnState(this.getTurnNumber() + 1, nextPlayer, nextEnemy);
+    return new Turn(this.getTurnNumber() + 1, nextPlayer, nextEnemy);
   }
 
-  getCurrentTurnState() {
-    return this.#turnStates[this.#turnStates.length - 1];
+  getCurrentTurn() {
+    return this.#turns[this.#turns.length - 1];
   }
 
   getTurnNumber() {
-    return this.#turnStates.length;
+    return this.#turns.length;
   }
 }
