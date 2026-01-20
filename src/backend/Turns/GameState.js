@@ -9,7 +9,7 @@ export default class GameState {
     this.#phase = phase;
   }
 
-  getIsGameOver() {
+  isGameOver() {
     return this.#phase === "gameover";
   }
 

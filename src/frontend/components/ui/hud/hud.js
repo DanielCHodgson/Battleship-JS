@@ -27,11 +27,11 @@ export default class Hud {
     EventBus.on("state changed", (state) => this.renderState(state));
   }
 
-  renderState({ turn, phase }) {
-    if (!turn) return;
+  renderState(state) {
+    const turn = state.getTurn();
 
     this.renderTurnInfo(turn);
-    this.renderActionInfo(turn, phase);
+    this.renderActionInfo(turn, state.getPhase());
   }
 
   renderTurnInfo(turn) {
