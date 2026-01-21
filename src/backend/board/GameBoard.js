@@ -22,7 +22,7 @@ export default class Gameboard {
       );
     }
 
-    if (!positions.every((pos) => this.#isInBounds(pos))) {
+    if (!positions.every((pos) => this.isInBounds(pos))) {
       return { ok: false, reason: "ship-out-of-bounds" };
     }
 
@@ -32,7 +32,7 @@ export default class Gameboard {
   }
 
   receiveAttack(point) {
-    if (!this.#isInBounds(point)) {
+    if (!this.isInBounds(point)) {
       return { ok: false, reason: "out-of-bounds" };
     }
 
@@ -74,7 +74,7 @@ export default class Gameboard {
     );
   }
 
-  #isInBounds(point) {
+  isInBounds(point) {
     return (
       point.x >= 0 &&
       point.x < this.#size &&
