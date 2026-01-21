@@ -11,15 +11,15 @@ export default class Player {
     this.#board = new Gameboard();
   }
 
-  placeHit(point) {
-    this.#board.receiveAttack(point);
-  }
-
-  getGameboard() {
+  getBoard() {
     return this.#board;
   }
 
   getName() {
     return this.#name;
+  }
+
+  isAI() {
+    return this.#isAI;
   }
 }

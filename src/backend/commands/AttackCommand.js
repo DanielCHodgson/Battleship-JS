@@ -1,35 +1,39 @@
 export default class AttackCommand {
-  #turnState;
+  #turnManager;
   #point;
+
+  #turn = null;
+  #board = null;
   #wasHit = false;
   #shipHit = null;
 
-  constructor(turnState, point) {
-    this.#turnState = turnState;
+  constructor(turnManager, point) {
+    this.#turnManager = turnManager;
     this.#point = point;
   }
 
   execute() {
-    if (this.#turnState.hasAttacked()) return false;
+    const turn = this.#turnManager.getCurrentTurn();
+    if (!turn || turn.hasAttacked()) return false;
 
-    const board = this.#turnState.getTargetBoard();
-    const result = board.receiveAttack(this.#point);
+    const board = turn.getTargetBoard();
+    const attack = board.receiveAttack(this.#point);
 
-    this.#turnState.markAttackDone();
-    this.#wasHit = result === "hit";
+    if (!attack?.ok) return false;
 
-    if (this.#wasHit) {
-      this.#shipHit = board.getShipAt(this.#point);
-    }
+    this.#turn = turn;
+    this.#board = board;
+    this.#wasHit = attack.result === "hit";
+    this.#shipHit = attack.ship ?? null;
 
-    return result;
+    turn.markAttackDone();
+    return attack.result;
   }
 
   undo() {
-    this.#turnState
-      .getTargetBoard()
-      .revertAttack(this.#point, this.#wasHit, this.#shipHit);
+    if (!this.#turn || !this.#board) return;
 
-    this.#turnState.markAttackUndone();
+    this.#board.revertAttack(this.#point, this.#wasHit, this.#shipHit);
+    this.#turn.markAttackUndone();
   }
 }

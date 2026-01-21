@@ -2,7 +2,7 @@ export default class Turn {
   #index;
   #currPlayer;
   #enemyPlayer;
-  #attackUsed = false;
+  #hasAttacked = false;
 
   constructor(index, currPlayer, enemyPlayer) {
     this.#index = index;
@@ -27,22 +27,22 @@ export default class Turn {
   }
   
   getPlayerBoard() {
-    return this.#currPlayer.getGameboard();
+    return this.#currPlayer.getBoard();
   }
 
   getTargetBoard() {
-    return this.#enemyPlayer.getGameboard();
+    return this.#enemyPlayer.getBoard();
   }
 
   hasAttacked() {
-    return this.#attackUsed;
+    return this.#hasAttacked;
   }
 
   markAttackDone() {
-    this.#attackUsed = true;
+    this.#hasAttacked = true;
   }
 
   markAttackUndone() {
-    this.#attackUsed = false;
+    this.#hasAttacked = false;
   }
 }

@@ -19,7 +19,10 @@ export default class GameController {
   }
 
   #registerEvents() {
-    EventBus.on("attack attempted", (point) => this.handleAttack(point));
+    EventBus.on("attack attempted", (point) => {
+      if (this.#phase !== "playing") return;
+      this.handleAttack(point);
+    });
     EventBus.on("next turn", () => {
       if (this.#phase === "playing") {
         this.executeCommand(new NextTurnCommand(this.#turnManager));
@@ -37,14 +40,12 @@ export default class GameController {
   }
 
   handleAttack(point) {
-    if (this.#phase !== "playing") return;
-
     const currentTurnState = this.#turnManager.getCurrentTurn();
     if (!currentTurnState || currentTurnState.hasAttacked()) return;
 
     const enemyBoard = currentTurnState.getTargetBoard();
     const result = this.executeCommand(
-      new AttackCommand(currentTurnState, point),
+      new AttackCommand(this.#turnManager, point),
     );
 
     if (result === "hit" && this.gameIsWon(enemyBoard)) {
@@ -102,12 +103,12 @@ export default class GameController {
   #initTestPlayers() {
     const player1 = new Player("Player1", false);
     player1
-      .getGameboard()
+      .getBoard()
       .placeShip(new Ship("tug", 1), { x: 9, y: 0 }, "vertical");
 
     const player2 = new Player("Player2", false);
     player2
-      .getGameboard()
+      .getBoard()
       .placeShip(new Ship("tug", 1), { x: 0, y: 0 }, "vertical");
 
     this.setPlayers(player1, player2);
