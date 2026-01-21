@@ -14,20 +14,21 @@ export default class GameController {
   #phase = "playing";
 
   constructor() {
-    this.#turnManager = new TurnManager(this);
+    this.#turnManager = new TurnManager();
     this.#registerEvents();
   }
 
   #registerEvents() {
     EventBus.on("attack attempted", (point) => {
       if (this.#phase !== "playing") return;
-      this.handleAttack(point);
+      this.attack(point);
     });
+
     EventBus.on("next turn", () => {
-      if (this.#phase === "playing") {
-        this.executeCommand(new NextTurnCommand(this.#turnManager));
-      }
+      if (this.#phase !== "playing") return;
+      this.executeCommand(new NextTurnCommand(this.#turnManager));
     });
+
     EventBus.on("undo", () => this.undoLastCommand());
   }
 
@@ -35,19 +36,19 @@ export default class GameController {
     if (!this.#players.player1 || !this.#players.player2) {
       this.#initTestPlayers();
     }
-    this.#turnManager.initialize();
+
+    const { player1, player2 } = this.#players;
+    this.#turnManager.initialize(player1, player2);
+
     this.emitState();
   }
 
-  handleAttack(point) {
-    const currentTurnState = this.#turnManager.getCurrentTurn();
-    if (!currentTurnState || currentTurnState.hasAttacked()) return;
+  attack(point) {
+    const currentTurn = this.#turnManager.getCurrentTurn();
+    if (!currentTurn || currentTurn.hasAttacked()) return;
 
-    const enemyBoard = currentTurnState.getTargetBoard();
-    const result = this.executeCommand(
-      new AttackCommand(this.#turnManager, point),
-    );
-
+    const enemyBoard = currentTurn.getTargetBoard();
+    const result = this.executeCommand(new AttackCommand(this.#turnManager, point));
     if (result === "hit" && this.gameIsWon(enemyBoard)) {
       this.executeCommand(new EndGameCommand(this));
     }
@@ -56,6 +57,7 @@ export default class GameController {
   undoLastCommand() {
     const command = this.#commandHistory.pop();
     if (!command) return;
+
     command.undo();
     this.emitState();
   }
@@ -102,14 +104,10 @@ export default class GameController {
 
   #initTestPlayers() {
     const player1 = new Player("Player1", false);
-    player1
-      .getBoard()
-      .placeShip(new Ship("tug", 1), { x: 9, y: 0 }, "vertical");
+    player1.getBoard().placeShip(new Ship("tug", 1), { x: 9, y: 0 }, "vertical");
 
     const player2 = new Player("Player2", false);
-    player2
-      .getBoard()
-      .placeShip(new Ship("tug", 1), { x: 0, y: 0 }, "vertical");
+    player2.getBoard().placeShip(new Ship("tug", 1), { x: 0, y: 0 }, "vertical");
 
     this.setPlayers(player1, player2);
   }

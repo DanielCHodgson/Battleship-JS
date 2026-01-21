@@ -2,8 +2,8 @@ export default class AttackCommand {
   #turnManager;
   #point;
 
-  #turn = null;
-  #board = null;
+  #executedTurn = null;
+  #targetedBoard = null;
   #wasHit = false;
   #shipHit = null;
 
@@ -19,21 +19,24 @@ export default class AttackCommand {
     const board = turn.getTargetBoard();
     const attack = board.receiveAttack(this.#point);
 
+    console.log(attack);
+
     if (!attack?.ok) return false;
 
-    this.#turn = turn;
-    this.#board = board;
+    this.#executedTurn = turn;
+    this.#targetedBoard = board;
     this.#wasHit = attack.result === "hit";
     this.#shipHit = attack.ship ?? null;
 
     turn.markAttackDone();
+
     return attack.result;
   }
 
   undo() {
-    if (!this.#turn || !this.#board) return;
+    if (!this.#executedTurn || !this.#targetedBoard) return;
 
-    this.#board.revertAttack(this.#point, this.#wasHit, this.#shipHit);
-    this.#turn.markAttackUndone();
+    this.#targetedBoard.revertAttack(this.#point, this.#wasHit, this.#shipHit);
+    this.#executedTurn.markAttackUndone();
   }
 }

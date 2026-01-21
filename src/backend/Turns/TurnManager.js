@@ -1,15 +1,15 @@
 import Turn from "./Turn";
 
 export default class TurnManager {
-  #gameController;
   #turns = [];
+  #player1 = null;
+  #player2 = null;
 
-  constructor(gameController) {
-    this.#gameController = gameController;
-  }
+  constructor() {}
 
-  initialize() {
-    const { player1, player2 } = this.#gameController.getPlayers();
+  initialize(player1, player2) {
+    this.#player1 = player1;
+    this.#player2 = player2;
     this.#turns = [new Turn(1, player1, player2)];
   }
 
@@ -28,9 +28,10 @@ export default class TurnManager {
   }
 
   #buildNextTurn(currTurn) {
-    const { player1, player2 } = this.#gameController.getPlayers();
-    const nextPlayer = currTurn.getPlayer() === player1 ? player2 : player1;
-    const nextEnemy = nextPlayer === player1 ? player2 : player1;
+    const nextPlayer =
+      currTurn.getPlayer() === this.#player1 ? this.#player2 : this.#player1;
+    const nextEnemy =
+      nextPlayer === this.#player1 ? this.#player2 : this.#player1;
 
     return new Turn(this.getTurnNumber() + 1, nextPlayer, nextEnemy);
   }
@@ -41,5 +42,9 @@ export default class TurnManager {
 
   getTurnNumber() {
     return this.#turns.length;
+  }
+
+  getTurns() {
+    return this.#turns;
   }
 }
