@@ -5,7 +5,7 @@ import RenderController from "./backend/controllers/RenderController";
 import GameController from "./backend/controllers/GameController";
 import Hud from "./frontend/components/ui/hud/hud";
 import BoardComponent from "./frontend/components/board/board-component";
-import Button from "./frontend/components/ui/button/button";
+import Button from "./frontend/components/ui/button/button-component";
 
 const display = document.querySelector(".display");
 const board1 = document.querySelector(".board1");

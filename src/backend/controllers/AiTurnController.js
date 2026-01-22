@@ -14,7 +14,7 @@ export default class AiTurnController {
     EventBus.on("next turn", () => {
       const currentTurn = this.#turnManager.getCurrentTurn();
       if (currentTurn && currentTurn.getPlayer().isAI()) {
-        this.#handleAITurn(currentTurn);
+        this.#pretendDelay(500).then(() => this.#handleAITurn(currentTurn));
       }
     });
   }
@@ -22,5 +22,9 @@ export default class AiTurnController {
   #handleAITurn(turn) {
     const aiMove = this.#enemyAI.calculateNextMove(turn);
     EventBus.emit("attack attempted", aiMove);
+  }
+
+  #pretendDelay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

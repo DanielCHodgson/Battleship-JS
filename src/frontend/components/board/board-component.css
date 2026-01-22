@@ -1,13 +1,12 @@
 .gameboard {
-  width: 600px;
-  height: 600px;
-  background-color: #d4f7f5;
-
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto;
   display: grid;
   grid-template-columns: repeat(10, 1fr);
   grid-template-rows: repeat(10, 1fr);
-  outline: 1px solid #333;
 }
+
 
 .board1 {
   pointer-events: none;

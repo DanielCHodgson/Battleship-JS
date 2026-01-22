@@ -1,7 +1,7 @@
 import EventBus from "../../../../backend/utilities/EventBus";
 import DomUtility from "../../../utilities/DomUtility";
-import htmlString from "./button.html";
-import "./button.css";
+import htmlString from "./button-component.html";
+import "./button-component.css";
 
 export default class Button {
   #container;
