@@ -1,19 +1,23 @@
-body {
+html, body {
   font-family: "Courier New", Courier, monospace;
 }
 
+body {
+  height: 100%;
+}
+
 .app-wrapper {
-  display: grid;
   height: 100vh;
-  place-items: center;
+  display: flex;
 }
 
 .game {
-  width: 100%;
+  flex: 1;
+  min-height: 0;
   display: grid;
-  height: 100vh;
-  grid-template-columns: 2fr 1fr;
-  gap: 1rem;
+  grid-template-columns: 5fr 3fr 1fr;
+  gap: 2rem;
+  padding: 1rem;
 }
 
 .display {
@@ -21,9 +25,11 @@ body {
 }
 
 .boards {
+  height: 100%;
+  min-height: 0;
   display: grid;
-  height: 100vh;
   grid-template-rows: 1fr 1fr;
+  justify-items: end;
   gap: 1rem;
 }
 
@@ -33,4 +39,34 @@ body {
   justify-content: center;
   align-content: flex-start;
   gap: 2rem;
+}
+
+.board1 {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.board1,
+.board2 {
+  min-height: 0;
+  display: flex;
+}
+
+.player-board,
+.enemy-board {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+
+.ui {
+  display: grid;
+  grid-template-rows: 2fr 5fr;
+  justify-content: center;
+  align-items: center;
+}
+
+.buttons {
+  align-items: center;
 }
