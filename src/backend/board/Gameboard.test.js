@@ -1,4 +1,4 @@
-import Gameboard from "./GameBoard";
+import Gameboard from "./Gameboard";
 import Ship from "../entities/Ship";
 
 describe("Gameboard", () => {

@@ -6,6 +6,8 @@ import GameState from "../Turns/GameState";
 import NextTurnCommand from "../commands/NextTurnCommand";
 import AttackCommand from "../commands/AttackCommand";
 import EndGameCommand from "../commands/EndGameCommand";
+import AiTurnController from "./AiTurnController";
+import EnemyAI from "./EnemyAI";
 
 export default class GameController {
   #players = {};
@@ -16,6 +18,7 @@ export default class GameController {
   constructor() {
     this.#turnManager = new TurnManager();
     this.#registerEvents();
+    new AiTurnController(this.#turnManager, new EnemyAI());
   }
 
   #registerEvents() {
@@ -106,7 +109,7 @@ export default class GameController {
     const player1 = new Player("Player1", false);
     player1.getBoard().placeShip(new Ship("tug", 1), { x: 9, y: 0 }, "vertical");
 
-    const player2 = new Player("Player2", false);
+    const player2 = new Player("Player2", true);
     player2.getBoard().placeShip(new Ship("tug", 1), { x: 0, y: 0 }, "vertical");
 
     this.setPlayers(player1, player2);

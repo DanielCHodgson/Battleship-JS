@@ -98,4 +98,8 @@ export default class Gameboard {
   getMisses() {
     return this.#misses;
   }
+
+  getSize() {
+    return this.#size;
+  }
 }
