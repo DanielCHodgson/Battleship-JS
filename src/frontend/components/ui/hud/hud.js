@@ -1,7 +1,7 @@
 import DomUtility from "../../../utilities/DomUtility";
 import htmlString from "./hud.html";
+import Button from "../button/button-component";
 import "./hud.css";
-
 import EventBus from "../../../../backend/utilities/EventBus";
 
 export default class Hud {
@@ -14,13 +14,23 @@ export default class Hud {
     this.#element = DomUtility.stringToHTML(htmlString);
 
     this.#cacheFields();
-    this.#registerEvents();
     this.render();
+    this.#initButtons();
+    this.#registerEvents();
   }
 
   #cacheFields() {
+    this.#fields.buttons = document.querySelector(".buttons");
     this.#fields.actionDisplay = this.#element.querySelector(".action-display");
     this.#fields.turnDisplay = this.#element.querySelector(".turn-display");
+  }
+
+  #initButtons() {
+    new Button(this.#fields.buttons, "next", "Next Turn", "next turn");
+    new Button(this.#fields.buttons, "undo", "Undo", "undo");
+
+    this.#fields.undoBtn = this.#fields.buttons.querySelector("#undo");
+    this.#fields.nextBtn = this.#fields.buttons.querySelector("#next");
   }
 
   #registerEvents() {
@@ -28,35 +38,56 @@ export default class Hud {
   }
 
   renderState(state) {
+    if (!state) return;
+
     const turn = state.getTurn();
+    const phase = state.getPhase();
 
-    this.renderTurnInfo(turn);
-    this.renderActionInfo(turn, state.getPhase());
-  }
-
-  renderTurnInfo(turn) {
-    this.#fields.turnDisplay.textContent =
-      `Turn: ${turn.getRound()} | ` +
-      `Active player: ${turn.getPlayer().getName()}`;
-  }
-
-  renderActionInfo(turn, phase) {
-    if (phase === "gameover") {
-      this.#fields.actionDisplay.textContent =
-        `Game Over! ${turn.getPlayer().getName()} ` +
-        `won in ${turn.getRound()} turns!`;
+    if (!turn) {
+      this.#fields.turnDisplay.textContent = "";
+      this.#fields.actionDisplay.textContent = "";
       return;
     }
 
-    if (turn.hasAttacked()) {
-      this.#fields.actionDisplay.textContent = `${turn.getPlayer().getName()} has attacked`;
+    this.renderTurnInfo(turn);
+    this.renderActionInfo(turn, phase);
+    this.updateButtons(state, turn);
+  }
+
+  renderTurnInfo(turn) {
+    const round = turn.getRound?.() ?? "";
+    const playerName = turn.getPlayer?.()?.getName?.() ?? "";
+
+    this.#fields.turnDisplay.textContent = `Turn: ${round} | Active player: ${playerName}`;
+  }
+
+  renderActionInfo(turn, phase) {
+    const playerName = turn.getPlayer?.()?.getName?.() ?? "";
+    const round = turn.getRound?.() ?? "";
+
+    if (phase === "gameover") {
+      this.#fields.actionDisplay.textContent = `Game Over! ${playerName} won in ${round} turns!`;
+      return;
+    }
+
+    if (typeof turn.hasAttacked === "function" && turn.hasAttacked()) {
+      this.#fields.actionDisplay.textContent = `${playerName} has attacked`;
       return;
     }
 
     this.#fields.actionDisplay.textContent = "";
   }
 
+  updateButtons(state, turn) {
+    const undoBtn = this.#fields.undoBtn;
+    const nextBtn = this.#fields.nextBtn;
+
+
+  }
+
   render() {
-    this.#container.appendChild(this.#element);
+    if (!this.#element.isConnected) {
+      this.#container.appendChild(this.#element);
+    }
   }
 }
