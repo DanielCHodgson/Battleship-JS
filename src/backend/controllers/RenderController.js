@@ -12,6 +12,8 @@ export default class RenderController {
 
   #registerEvents() {
     EventBus.on("state changed", (state) => this.render(state));
+    EventBus.on("ai preview", (point) => this.setPreview(point, true));
+    EventBus.on("ai preview cleared", (point) => this.setPreview(point, false));
   }
 
   #createCellMap(selector) {
@@ -26,7 +28,11 @@ export default class RenderController {
   render(state) {
     const turn = state.getTurn();
     this.renderPlayerBoard(turn.getPlayerBoard());
-    this.renderEnemyBoard(turn.getTargetBoard(), state.getPhase(), turn.hasAttacked());
+    this.renderEnemyBoard(
+      turn.getTargetBoard(),
+      state.getPhase(),
+      turn.hasAttacked(),
+    );
   }
 
   renderPlayerBoard(board) {
@@ -54,6 +60,12 @@ export default class RenderController {
     board
       .getMisses()
       .forEach(({ x, y }) => this.paintCell(this.#enemyCells, x, y, "miss"));
+  }
+
+  setPreview(point, on) {
+    const cell = this.#playerCells.get(`${point.x},${point.y}`);
+    if (!cell) return;
+    cell.classList.toggle("ai-preview", on);
   }
 
   paintCell(cellMap, x, y, type) {

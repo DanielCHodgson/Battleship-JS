@@ -1,7 +1,6 @@
 export default class AttackCommand {
   #turnManager;
   #point;
-
   #executedTurn = null;
   #targetedBoard = null;
   #wasHit = false;
@@ -18,8 +17,6 @@ export default class AttackCommand {
 
     const board = turn.getTargetBoard();
     const attack = board.receiveAttack(this.#point);
-
-    console.log(attack);
 
     if (!attack?.ok) return false;
 

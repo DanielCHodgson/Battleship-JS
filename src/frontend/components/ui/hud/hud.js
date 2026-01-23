@@ -26,11 +26,11 @@ export default class Hud {
   }
 
   #initButtons() {
-    new Button(this.#fields.buttons, "next", "Next Turn", "next turn");
+    //new Button(this.#fields.buttons, "next", "Next Turn", "next turn");
     new Button(this.#fields.buttons, "undo", "Undo", "undo");
 
+    //this.#fields.nextBtn = this.#fields.buttons.querySelector("#next");
     this.#fields.undoBtn = this.#fields.buttons.querySelector("#undo");
-    this.#fields.nextBtn = this.#fields.buttons.querySelector("#next");
   }
 
   #registerEvents() {
@@ -80,9 +80,7 @@ export default class Hud {
 
   updateButtons(state, turn) {
     const undoBtn = this.#fields.undoBtn;
-    const nextBtn = this.#fields.nextBtn;
-
-
+    //const nextBtn = this.#fields.nextBtn;
   }
 
   render() {

@@ -15,8 +15,8 @@ body {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 5fr 3fr 1fr;
-  gap: 2rem;
+  grid-template-columns: 5fr 3fr minmax(0, 1fr);
+  gap: 0.5rem;
   padding: 1rem;
 }
 
