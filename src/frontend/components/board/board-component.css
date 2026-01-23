@@ -34,7 +34,7 @@
   background-color: #000000;
 }
 
-.square:active {
+.square:active, .square.ai-preview {
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
   background-color: orange;
 }

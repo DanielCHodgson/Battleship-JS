@@ -3,10 +3,11 @@ import Ship from "../entities/Ship";
 import EventBus from "../utilities/EventBus";
 import TurnManager from "../Turns/TurnManager";
 import GameState from "../Turns/GameState";
-
 import AttackCommand from "../commands/AttackCommand";
 import CompositeCommand from "../commands/CompositeCommand";
 import ResolveTurnCommand from "../commands/ResolveTurnCommand";
+import EnemyAI from "./EnemyAI";
+import AiTurnController from "./AiTurnController";
 
 export default class GameController {
   #players = {};
@@ -16,6 +17,7 @@ export default class GameController {
 
   constructor() {
     this.#turnManager = new TurnManager();
+    new AiTurnController( this.#turnManager, new EnemyAI());
     this.#registerEvents();
   }
 

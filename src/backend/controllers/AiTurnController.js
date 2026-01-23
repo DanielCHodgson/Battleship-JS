@@ -7,7 +7,6 @@ export default class AiTurnController {
   #previewPoint = null;
 
   constructor(turnManager, enemyAI) {
-    console.log("AI TURN CONTROLLER LOADED", Date.now());
     this.#turnManager = turnManager;
     this.#enemyAI = enemyAI;
     this.#registerEvents();
@@ -41,7 +40,7 @@ export default class AiTurnController {
 
     console.log("AI is thinking...");
 
-    await this.#pretendDelay(500);
+    await this.#pretendDelay(1000);
 
     console.log("AI has decided on a move.");
 

@@ -63,7 +63,7 @@ export default class RenderController {
   }
 
   setPreview(point, on) {
-    const cell = this.#playerCells.get(`${point.x},${point.y}`);
+    const cell = this.#enemyCells.get(`${point.x},${point.y}`);
     if (!cell) return;
     cell.classList.toggle("ai-preview", on);
   }
