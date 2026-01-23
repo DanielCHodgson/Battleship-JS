@@ -1,6 +1,5 @@
 import "./styles/reset-modern.css";
 import "./styles/styles.css";
-
 import RenderController from "./backend/controllers/RenderController";
 import GameController from "./backend/controllers/GameController";
 import Hud from "./frontend/components/ui/hud/hud";

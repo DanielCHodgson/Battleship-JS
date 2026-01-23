@@ -7,62 +7,74 @@ export default class AiTurnController {
   #previewPoint = null;
 
   constructor(turnManager, enemyAI) {
+    console.log("AI TURN CONTROLLER LOADED", Date.now());
     this.#turnManager = turnManager;
     this.#enemyAI = enemyAI;
     this.#registerEvents();
   }
 
   #registerEvents() {
-    EventBus.on("state changed", (state) => {
-      this.#handleAiTurn(state);
-    });
-
-    EventBus.on("undo", () => {
-      this.#handleAiUndo();
-    });
+    EventBus.on("state changed", (state) => this.#handleAiTurn(state));
+    EventBus.on("undo", () => this.#handleAiUndo());
   }
 
   #handleAiTurn(state) {
-    if (this.#previewPoint) {
-      EventBus.emit("ai preview cleared", this.#previewPoint);
-      this.#previewPoint = null;
-    }
+    this.#clearMovePreview();
 
-    if (this.#isThinking) return;
-    if (state.getPhase() !== "playing") return;
+    if (!this.#canAiAct(state)) return;
 
     const turn = state.getTurn();
-    if (!turn || !turn.getPlayer().isAI() || !turn.hasAttacked()) return;
-
     const aiMove = this.#enemyAI.calculateNextMove(turn);
+
+    console.log(aiMove);
+
     if (!aiMove) return;
 
+    this.#simulateThinking(aiMove);
+  }
+
+  async #simulateThinking(aiMove) {
     this.#isThinking = true;
     this.#previewPoint = aiMove;
 
     EventBus.emit("ai preview", aiMove);
 
-    this.#pretendDelay(500).then(() => {
-      this.#isThinking = false;
+    console.log("AI is thinking...");
 
-      if (this.#previewPoint) {
-        EventBus.emit("ai preview cleared", this.#previewPoint);
-        this.#previewPoint = null;
-      }
+    await this.#pretendDelay(500);
 
-      const turn = this.#turnManager.getCurrentTurn();
-      if (!turn || !turn.getPlayer().isAI() || !turn.hasAttacked()) return;
+    console.log("AI has decided on a move.");
 
-      EventBus.emit("attack attempted", aiMove);
-    });
+    this.#isThinking = false;
+    this.#clearMovePreview();
+
+    const turn = this.#turnManager.getCurrentTurn();
+    if (!this.#shouldAiPlayTurn(turn)) return;
+
+    EventBus.emit("attack attempted", aiMove);
   }
 
   #handleAiUndo() {
     this.#isThinking = false;
-    if (this.#previewPoint) {
-      EventBus.emit("ai preview cleared", this.#previewPoint);
-      this.#previewPoint = null;
-    }
+    this.#clearMovePreview();
+  }
+
+  #canAiAct(state) {
+    if (this.#isThinking) return false;
+    if (state.getPhase() !== "playing") return false;
+
+    return this.#shouldAiPlayTurn(state.getTurn());
+  }
+
+  #shouldAiPlayTurn(turn) {
+    return turn && turn.getPlayer().isAI() && !turn.hasAttacked();
+  }
+
+  #clearMovePreview() {
+    if (!this.#previewPoint) return;
+
+    EventBus.emit("ai preview cleared", this.#previewPoint);
+    this.#previewPoint = null;
   }
 
   #pretendDelay(ms) {
