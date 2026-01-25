@@ -8,16 +8,19 @@ import CompositeCommand from "../commands/CompositeCommand";
 import ResolveTurnCommand from "../commands/ResolveTurnCommand";
 import EnemyAI from "./EnemyAI";
 import AiTurnController from "./AiTurnController";
+import ShipFactory from "../entities/ShipFactory";
 
 export default class GameController {
   #players = {};
   #turnManager;
   #commandHistory = [];
   #phase = "playing";
+  #shipFactory;
 
   constructor() {
     this.#turnManager = new TurnManager();
-    new AiTurnController( this.#turnManager, new EnemyAI());
+    this.#shipFactory = new ShipFactory();
+    new AiTurnController(this.#turnManager, new EnemyAI());
     this.#registerEvents();
   }
 
@@ -36,7 +39,7 @@ export default class GameController {
 
   startGame() {
     if (!this.#players.player1 || !this.#players.player2) {
-      this.#initTestPlayers();
+      this.#initTestGame();
     }
 
     const { player1, player2 } = this.#players;
@@ -110,17 +113,41 @@ export default class GameController {
 
   // Dev / Testing utility
 
-  #initTestPlayers() {
-    const player1 = new Player("Player1", false);
-    player1
-      .getBoard()
-      .placeShip(new Ship("tug", 1), { x: 9, y: 0 }, "vertical");
+  #initTestGame() {
 
-    const player2 = new Player("Player2", true);
-    player2
-      .getBoard()
-      .placeShip(new Ship("tug", 1), { x: 0, y: 0 }, "vertical");
+    const player1 = this.#initTestPlayer("Player1", false);
+    const player2 = this.#initTestPlayer("Player2", true);
 
     this.setPlayers(player1, player2);
+  }
+
+  #initTestPlayer(name, isAi) {
+    const ships = this.#shipFactory.createFleet();
+
+    const player = new Player(name, isAi);
+
+    ships.forEach((ship) => {
+      this.#placeShipAtRandom(ship, player.getBoard());
+    });
+
+    return player;
+  }
+
+  #placeShipAtRandom(ship, board, maxAttempts = 100) {
+    const size = board.getSize();
+
+    for (let i = 0; i < maxAttempts; i++) {
+      const point = {
+        x: Math.floor(Math.random() * size),
+        y: Math.floor(Math.random() * size),
+      };
+
+      const direction = Math.random() < 0.5 ? "horizontal" : "vertical";
+
+      const result = board.placeShip(ship, point, direction);
+      if (result.ok) return true;
+    }
+
+    throw new Error(`Failed to place ship ${ship.getName()}`);
   }
 }
