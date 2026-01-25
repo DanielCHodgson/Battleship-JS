@@ -9,8 +9,11 @@ import ResolveTurnCommand from "../commands/ResolveTurnCommand";
 import EnemyAI from "./EnemyAI";
 import AiTurnController from "./AiTurnController";
 import ShipFactory from "../entities/ShipFactory";
+import SetupPage from "../../frontend/pages/setup-page/setup-page";
 
 export default class GameController {
+  #setupPage;
+
   #players = {};
   #turnManager;
   #commandHistory = [];
@@ -35,6 +38,11 @@ export default class GameController {
         this.executeCommand(new NextTurnCommand(this.#turnManager));
       }}); 
     */
+  }
+
+  launchGame() {
+
+    this.#setupPage = new SetupPage(document.querySelector(".app-wrapper"));
   }
 
   startGame() {
@@ -114,7 +122,6 @@ export default class GameController {
   // Dev / Testing utility
 
   #initTestGame() {
-
     const player1 = this.#initTestPlayer("Player1", false);
     const player2 = this.#initTestPlayer("Player2", true);
 

@@ -1,0 +1,68 @@
+<div class="setup-page">
+  <div class="setup-card">
+    <h1 class="setup-title">Welcome to Battleship</h1>
+    <p class="setup-title">Player config</p>
+
+    <form class="setup-form" data-role="form">
+      <div class="player-section">
+        <h2 class="section-title">Player 1</h2>
+
+        <label class="field">
+          <span class="field-label">Name</span>
+          <input
+            class="text-input"
+            type="text"
+            name="player1Name"
+            placeholder="Enter player1 name"
+            autocomplete="off"
+            maxlength="24"
+            required
+          />
+        </label>
+
+        <label class="toggle">
+          <input type="checkbox" name="player1AI" />
+          <span class="toggle-ui" aria-hidden="true"></span>
+          <span class="toggle-label">AI controlled</span>
+        </label>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="player-section">
+        <h2 class="section-title">Player 2</h2>
+
+        <label class="field">
+          <span class="field-label">Name</span>
+          <input
+            class="text-input"
+            type="text"
+            name="player2Name"
+            placeholder="Enter player2 name"
+            autocomplete="off"
+            maxlength="24"
+            required
+          />
+        </label>
+
+        <label class="toggle">
+          <input type="checkbox" name="player2AI" />
+          <span class="toggle-ui" aria-hidden="true"></span>
+          <span class="toggle-label">AI controlled</span>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn btn-secondary" data-role="swap">
+          Swap Players
+        </button>
+
+        <button type="submit" class="btn btn-primary" data-role="start">
+          Start Game
+        </button>
+      </div>
+
+      <p class="hint" data-role="hint" aria-live="polite"></p>
+    </form>
+  </div>
+</div>

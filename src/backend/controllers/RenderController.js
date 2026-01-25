@@ -28,25 +28,21 @@ export default class RenderController {
   render(state) {
     const turn = state.getTurn();
     this.renderPlayerBoard(turn);
-    this.renderEnemyBoard(
-      turn.getTargetBoard(),
-      state.getPhase(),
-      turn.hasAttacked(),
-    );
+    this.renderEnemyBoard(turn);
   }
 
   renderPlayerBoard(turn) {
+    this.clearBoard(this.#playerCells);
 
-    const targetBoard = document.querySelector(".target-board")
+    const targetBoard = document.querySelector(".target-board");
 
     if (turn.getPlayer().isAI()) {
-     targetBoard.style.pointerEvents = "none";
+      targetBoard.style.pointerEvents = "none";
     } else {
       targetBoard.style.pointerEvents = "";
     }
 
     const board = turn.getPlayerBoard();
-    this.clearBoard(this.#playerCells);
 
     board.getShips().forEach((ship) =>
       ship.getPositions().forEach(({ x, y }) => {
@@ -61,8 +57,18 @@ export default class RenderController {
       .forEach(({ x, y }) => this.paintCell(this.#playerCells, x, y, "miss"));
   }
 
-  renderEnemyBoard(board) {
+  renderEnemyBoard(turn) {
     this.clearBoard(this.#enemyCells);
+
+    const playerBoard = document.querySelector(".player-board .gameboard");
+
+    if (turn.getPlayer().isAI()) {
+      playerBoard.classList.add("covered");
+    } else {
+      playerBoard.classList.remove("covered");
+    }
+
+    const board = turn.getTargetBoard();
 
     board
       .getHits()
