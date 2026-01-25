@@ -20,16 +20,20 @@ export default class Hud {
   }
 
   #cacheFields() {
-    this.#fields.buttons = document.querySelector(".buttons");
+    const root = this.#container.closest(".ui") || document;
+
+    this.#fields.buttons = root.querySelector(".buttons");
     this.#fields.actionDisplay = this.#element.querySelector(".action-display");
     this.#fields.turnDisplay = this.#element.querySelector(".turn-display");
   }
 
   #initButtons() {
-    //new Button(this.#fields.buttons, "next", "Next Turn", "next turn");
-    new Button(this.#fields.buttons, "undo", "Undo", "undo");
+    if (!this.#fields.buttons) return;
 
-    //this.#fields.nextBtn = this.#fields.buttons.querySelector("#next");
+    if (!this.#fields.buttons.querySelector("#undo")) {
+      new Button(this.#fields.buttons, "undo", "Undo", "undo");
+    }
+
     this.#fields.undoBtn = this.#fields.buttons.querySelector("#undo");
   }
 
@@ -40,47 +44,44 @@ export default class Hud {
   renderState(state) {
     if (!state) return;
 
-    const turn = state.getTurn();
-    const phase = state.getPhase();
+    const turn = state.getTurn?.();
+    const phase = state.getPhase?.();
 
     if (!turn) {
       this.#fields.turnDisplay.textContent = "";
       this.#fields.actionDisplay.textContent = "";
+      this.#fields.actionDisplay.classList.remove("is-alert");
       return;
     }
 
     this.renderTurnInfo(turn);
     this.renderActionInfo(turn, phase);
-    this.updateButtons(state, turn);
   }
 
   renderTurnInfo(turn) {
     const round = turn.getRound?.() ?? "";
     const playerName = turn.getPlayer?.()?.getName?.() ?? "";
-
-    this.#fields.turnDisplay.textContent = `Turn: ${round} | Active player: ${playerName}`;
+    this.#fields.turnDisplay.textContent = `Turn ${round} — ${playerName}`;
   }
 
   renderActionInfo(turn, phase) {
     const playerName = turn.getPlayer?.()?.getName?.() ?? "";
     const round = turn.getRound?.() ?? "";
 
+    this.#fields.actionDisplay.classList.remove("is-alert");
+
     if (phase === "gameover") {
-      this.#fields.actionDisplay.textContent = `Game Over! ${playerName} won in ${round} turns!`;
+      this.#fields.actionDisplay.textContent = `Game Over — ${playerName} won in ${round} turns.`;
+      this.#fields.actionDisplay.classList.add("is-alert");
       return;
     }
 
-    if (typeof turn.hasAttacked === "function" && turn.hasAttacked()) {
-      this.#fields.actionDisplay.textContent = `${playerName} has attacked`;
+    if (turn.hasAttacked?.()) {
+      this.#fields.actionDisplay.textContent = `${playerName} has attacked.`;
       return;
     }
 
-    this.#fields.actionDisplay.textContent = "";
-  }
-
-  updateButtons(state, turn) {
-    const undoBtn = this.#fields.undoBtn;
-    //const nextBtn = this.#fields.nextBtn;
+    this.#fields.actionDisplay.textContent = "Pick a target square.";
   }
 
   render() {

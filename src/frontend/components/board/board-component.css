@@ -1,28 +1,28 @@
 .gameboard {
   position: relative;
-  width: 100%;
-  height: 100%;
-  max-height: 100%;
   aspect-ratio: 1 / 1;
+
   display: grid;
   grid-template-columns: repeat(10, 1fr);
   grid-template-rows: repeat(10, 1fr);
 }
 
-.gameboard.covered:after {
+.gameboard.covered::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: black;
+  background: #000;
   opacity: 1;
 }
 
 .square {
   background-color: #95ddda;
   border: 1px solid #333;
+
   display: flex;
   justify-content: center;
   align-items: center;
+
   font-weight: bold;
   cursor: pointer;
   font-size: 0.9rem;
@@ -36,9 +36,11 @@
 .square.ship {
   background-color: #858585;
 }
+
 .square.hit {
   background-color: #ff0000;
 }
+
 .square.miss {
   background-color: #000000;
 }
@@ -52,12 +54,4 @@
 .square.disabled {
   pointer-events: none;
   opacity: 0.5;
-}
-
-.player-board .gameboard {
-  opacity: 0.9;
-}
-
-.enemy-board .gameboard {
-  border: 2px solid red;
 }

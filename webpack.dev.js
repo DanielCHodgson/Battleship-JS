@@ -8,9 +8,8 @@ module.exports = merge(common, {
 
   devServer: {
     static: false,
-    hot: true,
+    hot: "only",
     open: true,
-    watchFiles: ["src/**/*"],
   },
 
   module: {

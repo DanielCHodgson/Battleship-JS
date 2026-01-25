@@ -10,9 +10,11 @@ import EnemyAI from "./EnemyAI";
 import AiTurnController from "./AiTurnController";
 import ShipFactory from "../entities/ShipFactory";
 import SetupPage from "../../frontend/pages/setup-page/setup-page";
+import GamePage from "../../frontend/pages/game-page/game-page";
 
 export default class GameController {
   #setupPage;
+  #gamePage;
 
   #players = {};
   #turnManager;
@@ -52,6 +54,9 @@ export default class GameController {
     if (!this.#players.player1 || !this.#players.player2) {
       this.#initTestGame(playerDetails);
     }
+
+    this.#gamePage = new GamePage();
+    this.#gamePage.open();
 
     const { player1, player2 } = this.#players;
 

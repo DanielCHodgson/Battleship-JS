@@ -62,17 +62,20 @@ export default class RenderController {
 
     const playerBoard = document.querySelector(".player-board .gameboard");
 
-    if (turn.getPlayer().isAI()) {
-      playerBoard.classList.add("covered");
-    } else {
-      playerBoard.classList.remove("covered");
-    }
+    const activePlayer = turn.getPlayer();
+    const enemyPlayer = turn.getEnemyPlayer();
+
+    const isAIVsHuman = activePlayer.isAI() !== enemyPlayer.isAI();
+    const aiIsActing = activePlayer.isAI();
+
+    playerBoard.classList.toggle("covered", isAIVsHuman && aiIsActing);
 
     const board = turn.getTargetBoard();
 
     board
       .getHits()
       .forEach(({ x, y }) => this.paintCell(this.#enemyCells, x, y, "hit"));
+
     board
       .getMisses()
       .forEach(({ x, y }) => this.paintCell(this.#enemyCells, x, y, "miss"));
