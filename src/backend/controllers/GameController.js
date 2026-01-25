@@ -28,6 +28,10 @@ export default class GameController {
   }
 
   #registerEvents() {
+    EventBus.on("setup submitted", (playerDetails) => {
+      this.#setupPage.destroy();
+      this.startGame(playerDetails);
+    });
     EventBus.on("attack attempted", (point) => this.handleAttack(point));
     EventBus.on("undo", () => this.undoLastCommand());
 
@@ -41,13 +45,12 @@ export default class GameController {
   }
 
   launchGame() {
-
     this.#setupPage = new SetupPage(document.querySelector(".app-wrapper"));
   }
 
-  startGame() {
+  startGame(playerDetails) {
     if (!this.#players.player1 || !this.#players.player2) {
-      this.#initTestGame();
+      this.#initTestGame(playerDetails);
     }
 
     const { player1, player2 } = this.#players;
@@ -121,9 +124,15 @@ export default class GameController {
 
   // Dev / Testing utility
 
-  #initTestGame() {
-    const player1 = this.#initTestPlayer("Player1", false);
-    const player2 = this.#initTestPlayer("Player2", true);
+  #initTestGame(playerDetails) {
+    const player1 = this.#initTestPlayer(
+      playerDetails.player1.name,
+      playerDetails.player1.isAI,
+    );
+    const player2 = this.#initTestPlayer(
+      playerDetails.player2.name,
+      playerDetails.player2.isAI,
+    );
 
     this.setPlayers(player1, player2);
   }

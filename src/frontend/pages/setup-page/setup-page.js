@@ -7,14 +7,13 @@ export default class SetupPage {
   #container;
   #element;
   #fields = {};
+  #handlers = {};
 
   constructor(container) {
     this.#container = container;
     this.#element = DomUtility.stringToHTML(htmlString);
-
     this.#cacheFields();
     this.#bindEvents();
-
     this.render();
   }
 
@@ -23,31 +22,91 @@ export default class SetupPage {
     this.#fields.hint = this.#element.querySelector("[data-role='hint']");
     this.#fields.swap = this.#element.querySelector("[data-role='swap']");
 
-    this.#fields.player1Name = this.#element.querySelector("input[name='player1Name']");
-    this.#fields.player2Name = this.#element.querySelector("input[name='player2Name']");
-    this.#fields.player1AI = this.#element.querySelector("input[name='player1AI']");
-    this.#fields.player2AI = this.#element.querySelector("input[name='player2AI']");
+    this.#fields.player1Name = this.#element.querySelector(
+      "input[name='player1Name']",
+    );
+    this.#fields.player2Name = this.#element.querySelector(
+      "input[name='player2Name']",
+    );
+    this.#fields.player1AI = this.#element.querySelector(
+      "input[name='player1AI']",
+    );
+    this.#fields.player2AI = this.#element.querySelector(
+      "input[name='player2AI']",
+    );
   }
 
   #bindEvents() {
-    this.#fields.form.addEventListener("submit", (element) => {
-      element.preventDefault();
+    this.#handlers.onSubmit = (e) => {
+      e.preventDefault();
       this.#submit();
-    });
+    };
 
-    this.#fields.swap.addEventListener("click", () => this.#swapPlayers());
+    this.#handlers.onSwap = () => this.#swapPlayers();
 
-    this.#fields.player1AI.addEventListener("change", () => {
-      if (this.#fields.player1AI.checked && !this.#fields.player1Name.value.trim()) {
-        this.#fields.player1Name.value = this.#fields.player2Name.value === "CPU" ? "CPU2" : "CPU";
+    this.#handlers.onPlayer1AIChange = () => {
+      if (
+        this.#fields.player1AI.checked &&
+        !this.#fields.player1Name.value.trim()
+      ) {
+        this.#fields.player1Name.value =
+          this.#fields.player2Name.value === "CPU" ? "CPU2" : "CPU";
       }
-    });
-    
-    this.#fields.player2AI.addEventListener("change", () => {
-      if (this.#fields.player2AI.checked && !this.#fields.player2Name.value.trim()) {
-         this.#fields.player2Name.value = this.#fields.player1Name.value === "CPU" ? "CPU2" : "CPU";
+    };
+
+    this.#handlers.onPlayer2AIChange = () => {
+      if (
+        this.#fields.player2AI.checked &&
+        !this.#fields.player2Name.value.trim()
+      ) {
+        this.#fields.player2Name.value =
+          this.#fields.player1Name.value === "CPU" ? "CPU2" : "CPU";
       }
-    });
+    };
+
+    this.#fields.form.addEventListener("submit", this.#handlers.onSubmit);
+    this.#fields.swap.addEventListener("click", this.#handlers.onSwap);
+    this.#fields.player1AI.addEventListener(
+      "change",
+      this.#handlers.onPlayer1AIChange,
+    );
+    this.#fields.player2AI.addEventListener(
+      "change",
+      this.#handlers.onPlayer2AIChange,
+    );
+  }
+
+  destroy() {
+    if (this.#fields.form && this.#handlers.onSubmit) {
+      this.#fields.form.removeEventListener("submit", this.#handlers.onSubmit);
+    }
+
+    if (this.#fields.swap && this.#handlers.onSwap) {
+      this.#fields.swap.removeEventListener("click", this.#handlers.onSwap);
+    }
+
+    if (this.#fields.player1AI && this.#handlers.onPlayer1AIChange) {
+      this.#fields.player1AI.removeEventListener(
+        "change",
+        this.#handlers.onPlayer1AIChange,
+      );
+    }
+
+    if (this.#fields.player2AI && this.#handlers.onPlayer2AIChange) {
+      this.#fields.player2AI.removeEventListener(
+        "change",
+        this.#handlers.onPlayer2AIChange,
+      );
+    }
+
+    if (this.#element?.parentNode) {
+      this.#element.parentNode.removeChild(this.#element);
+    }
+
+    this.#fields = {};
+    this.#handlers = {};
+    this.#element = null;
+    this.#container = null;
   }
 
   #submit() {
@@ -64,7 +123,7 @@ export default class SetupPage {
       return;
     }
 
-    const payload = {
+    const playerDetails = {
       player1: {
         name: player1Name,
         isAI: this.#fields.player1AI.checked,
@@ -76,7 +135,7 @@ export default class SetupPage {
     };
 
     this.#setHint("");
-    EventBus.emit("setup submitted", payload);
+    EventBus.emit("setup submitted", playerDetails);
   }
 
   #swapPlayers() {
