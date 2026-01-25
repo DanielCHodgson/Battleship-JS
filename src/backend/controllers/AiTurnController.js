@@ -5,6 +5,7 @@ export default class AiTurnController {
   #turnManager;
   #isThinking = false;
   #previewPoint = null;
+  #thinkToken = 0;
 
   constructor(turnManager, enemyAI) {
     this.#turnManager = turnManager;
@@ -18,31 +19,31 @@ export default class AiTurnController {
   }
 
   #handleAiTurn(state) {
+    this.#thinkToken++;
+
     this.#clearMovePreview();
+    this.#isThinking = false;
 
     if (!this.#canAiAct(state)) return;
 
     const turn = state.getTurn();
     const aiMove = this.#enemyAI.calculateNextMove(turn);
-
-    console.log(aiMove);
-
     if (!aiMove) return;
 
-    this.#simulateThinking(aiMove);
+    this.#simulateThinking(aiMove, this.#thinkToken);
   }
 
-  async #simulateThinking(aiMove) {
+  async #simulateThinking(aiMove, tokenAtStart) {
     this.#isThinking = true;
     this.#previewPoint = aiMove;
 
+    await this.#pretendDelay(1000);
+    if (tokenAtStart !== this.#thinkToken) return;
+
     EventBus.emit("ai preview", aiMove);
 
-    console.log("AI is thinking...");
-
     await this.#pretendDelay(1000);
-
-    console.log("AI has decided on a move.");
+    if (tokenAtStart !== this.#thinkToken) return;
 
     this.#isThinking = false;
     this.#clearMovePreview();
@@ -50,10 +51,13 @@ export default class AiTurnController {
     const turn = this.#turnManager.getCurrentTurn();
     if (!this.#shouldAiPlayTurn(turn)) return;
 
+    if (tokenAtStart !== this.#thinkToken) return;
+
     EventBus.emit("attack attempted", aiMove);
   }
 
   #handleAiUndo() {
+    this.#thinkToken++;
     this.#isThinking = false;
     this.#clearMovePreview();
   }
@@ -61,7 +65,6 @@ export default class AiTurnController {
   #canAiAct(state) {
     if (this.#isThinking) return false;
     if (state.getPhase() !== "playing") return false;
-
     return this.#shouldAiPlayTurn(state.getTurn());
   }
 
@@ -71,7 +74,6 @@ export default class AiTurnController {
 
   #clearMovePreview() {
     if (!this.#previewPoint) return;
-
     EventBus.emit("ai preview cleared", this.#previewPoint);
     this.#previewPoint = null;
   }

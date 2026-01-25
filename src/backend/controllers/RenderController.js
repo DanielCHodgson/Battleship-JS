@@ -27,7 +27,7 @@ export default class RenderController {
 
   render(state) {
     const turn = state.getTurn();
-    this.renderPlayerBoard(turn.getPlayerBoard());
+    this.renderPlayerBoard(turn);
     this.renderEnemyBoard(
       turn.getTargetBoard(),
       state.getPhase(),
@@ -35,7 +35,17 @@ export default class RenderController {
     );
   }
 
-  renderPlayerBoard(board) {
+  renderPlayerBoard(turn) {
+
+    const targetBoard = document.querySelector(".target-board")
+
+    if (turn.getPlayer().isAI()) {
+     targetBoard.style.pointerEvents = "none";
+    } else {
+      targetBoard.style.pointerEvents = "";
+    }
+
+    const board = turn.getPlayerBoard();
     this.clearBoard(this.#playerCells);
 
     board.getShips().forEach((ship) =>
