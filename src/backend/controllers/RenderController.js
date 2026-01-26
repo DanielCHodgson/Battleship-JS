@@ -3,10 +3,16 @@ import EventBus from "../utilities/EventBus";
 export default class RenderController {
   #playerCells;
   #enemyCells;
+  #playerBoard;
+  #targetBoard;
 
   constructor() {
     this.#playerCells = this.#createCellMap(".board1 > .gameboard");
     this.#enemyCells = this.#createCellMap(".board2 > .gameboard");
+
+    this.#playerBoard = document.querySelector(".player-board");
+    this.#targetBoard = document.querySelector(".target-board");
+
     this.#registerEvents();
   }
 
@@ -27,6 +33,13 @@ export default class RenderController {
 
   render(state) {
     const turn = state.getTurn();
+
+    if (turn.getPlayer().isAI()) {
+      this.#targetBoard.style.pointerEvents = "none";
+    } else {
+      this.#targetBoard.style.pointerEvents = "";
+    }
+
     this.renderPlayerBoard(turn);
     this.renderEnemyBoard(turn);
   }
@@ -34,13 +47,8 @@ export default class RenderController {
   renderPlayerBoard(turn) {
     this.clearBoard(this.#playerCells);
 
-    const targetBoard = document.querySelector(".target-board");
-
-    if (turn.getPlayer().isAI()) {
-      targetBoard.style.pointerEvents = "none";
-    } else {
-      targetBoard.style.pointerEvents = "";
-    }
+    this.#playerBoard.querySelector("h2").textContent =
+      `${turn.getPlayer().getName()}'s board`;
 
     const board = turn.getPlayerBoard();
 
@@ -60,7 +68,10 @@ export default class RenderController {
   renderEnemyBoard(turn) {
     this.clearBoard(this.#enemyCells);
 
-    const playerBoard = document.querySelector(".player-board .gameboard");
+    this.#targetBoard.querySelector("h2").textContent =
+      `${turn.getEnemyPlayer().getName()}'s board`;
+
+    const playerBoard = this.#playerBoard.querySelector(".gameboard");
 
     const activePlayer = turn.getPlayer();
     const enemyPlayer = turn.getEnemyPlayer();

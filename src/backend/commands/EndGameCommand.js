@@ -11,6 +11,7 @@ export default class EndGameCommand {
   execute() {
     this.#prevPhase = this.#gameController.getPhase();
     this.#gameController.setPhase("gameover");
+    console.log("game ended!")
     return true;
   }
 

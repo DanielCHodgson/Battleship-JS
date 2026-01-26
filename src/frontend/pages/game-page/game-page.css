@@ -41,6 +41,9 @@
 .board2 > .gameboard {
   height: 100%;
 }
+.board1 > .gameboard {
+  pointer-events: none;
+}
 
 
 .player-board .gameboard {

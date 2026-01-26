@@ -77,6 +77,7 @@ export default class GameController {
     ]);
 
     this.executeCommand(move);
+    this.emitState();
   }
 
   undoLastCommand() {
@@ -91,7 +92,6 @@ export default class GameController {
     const result = command.execute();
     if (result !== false) {
       this.#commandHistory.push(command);
-      this.emitState();
     }
     return result;
   }

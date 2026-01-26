@@ -6,6 +6,8 @@ export default class AiTurnController {
   #isThinking = false;
   #previewPoint = null;
   #thinkToken = 0;
+  #thinkDelay = 250;
+  #nextTurnDelay = 250;
 
   constructor(turnManager, enemyAI) {
     this.#turnManager = turnManager;
@@ -20,7 +22,6 @@ export default class AiTurnController {
 
   #handleAiTurn(state) {
     this.#thinkToken++;
-
     this.#clearMovePreview();
     this.#isThinking = false;
 
@@ -37,12 +38,12 @@ export default class AiTurnController {
     this.#isThinking = true;
     this.#previewPoint = aiMove;
 
-    await this.#pretendDelay(1000);
+    await this.#pretendDelay(this.#thinkDelay);
     if (tokenAtStart !== this.#thinkToken) return;
 
     EventBus.emit("ai preview", aiMove);
 
-    await this.#pretendDelay(1000);
+    await this.#pretendDelay(this.#nextTurnDelay);
     if (tokenAtStart !== this.#thinkToken) return;
 
     this.#isThinking = false;
