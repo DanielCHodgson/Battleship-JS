@@ -6,7 +6,7 @@ import GameState from "../Turns/GameState";
 import AttackCommand from "../commands/AttackCommand";
 import CompositeCommand from "../commands/CompositeCommand";
 import ResolveTurnCommand from "../commands/ResolveTurnCommand";
-import EnemyAI from "./EnemyAI";
+import AiMoveCalculator from "./AiMoveCalculator";
 import AiTurnController from "./AiTurnController";
 import ShipFactory from "../entities/ShipFactory";
 import SetupPage from "../../frontend/pages/setup-page/setup-page";
@@ -25,7 +25,7 @@ export default class GameController {
   constructor() {
     this.#turnManager = new TurnManager();
     this.#shipFactory = new ShipFactory();
-    new AiTurnController(this.#turnManager, new EnemyAI());
+    new AiTurnController(this.#turnManager, new AiMoveCalculator());
     this.#registerEvents();
   }
 
