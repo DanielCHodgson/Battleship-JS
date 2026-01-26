@@ -34,7 +34,17 @@ export default class Hud {
       new Button(this.#fields.buttons, "undo", "Undo", "undo");
     }
 
+    if (!this.#fields.buttons.querySelector("#pause")) {
+      new Button(this.#fields.buttons, "pause", "Pause AI", "togglePause");
+    }
+
     this.#fields.undoBtn = this.#fields.buttons.querySelector("#undo");
+    this.#fields.pauseBtn = this.#fields.buttons.querySelector("#pause");
+
+    this.#fields.pauseBtn.addEventListener("click", () => {
+      const isPaused = this.#fields.pauseBtn.classList.toggle("is-active");
+      this.#fields.pauseBtn.textContent = isPaused ? "Resume AI" : "Pause AI";
+    });
   }
 
   #registerEvents() {
