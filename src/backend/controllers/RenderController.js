@@ -18,8 +18,8 @@ export default class RenderController {
 
   #registerEvents() {
     EventBus.on("state changed", (state) => this.render(state));
-    EventBus.on("ai preview", (point) => this.setPreview(point, true));
-    EventBus.on("ai preview cleared", (point) => this.setPreview(point, false));
+    EventBus.on("show ai preview", (point) => this.setPreview(point, true));
+    EventBus.on("clear ai preview", (point) => this.setPreview(point, false));
   }
 
   #createCellMap(selector) {
@@ -107,7 +107,7 @@ export default class RenderController {
 
   clearBoard(cellMap) {
     cellMap.forEach((cell) =>
-      cell.classList.remove("ship", "hit", "miss", "disabled"),
+      cell.classList.remove("ship", "hit", "miss", "disabled", "ai-preview"),
     );
   }
 }

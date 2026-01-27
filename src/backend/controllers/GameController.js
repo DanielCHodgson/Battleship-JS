@@ -76,8 +76,8 @@ export default class GameController {
       new ResolveTurnCommand(this.#turnManager, this),
     ]);
 
-    this.executeCommand(move);
-    this.emitState();
+    const result = this.executeCommand(move);
+    if (result !== false) this.emitState();
   }
 
   undoLastCommand() {

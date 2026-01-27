@@ -8,10 +8,12 @@ export default class AiTurnController {
   #isPaused = false;
 
   #previewPoint = null;
+  #previewShown = false;
+
   #thinkToken = 0;
 
-  #thinkDelay = 250;
-  #nextTurnDelay = 250;
+  #thinkDelay = 750;
+  #nextTurnDelay = 750;
 
   constructor(turnManager, enemyAI) {
     this.#turnManager = turnManager;
@@ -65,18 +67,22 @@ export default class AiTurnController {
       check();
     };
 
-    return { token, check, delay, waitUntilResumed };
+    return { check, delay, waitUntilResumed };
   }
 
   async #simulateThinking(aiMove, run) {
+    this.#clearMovePreview();
     this.#isThinking = true;
+
     this.#previewPoint = aiMove;
+    this.#previewShown = false;
 
     try {
       await run.waitUntilResumed();
       await run.delay(this.#thinkDelay);
 
-      EventBus.emit("ai preview", aiMove);
+      EventBus.emit("show ai preview", aiMove);
+      this.#previewShown = true;
 
       await run.waitUntilResumed();
       await run.delay(this.#nextTurnDelay);
@@ -95,10 +101,14 @@ export default class AiTurnController {
     }
   }
 
-  #handleAiUndo() {
+  #cancelRun() {
     this.#thinkToken++;
     this.#isThinking = false;
     this.#clearMovePreview();
+  }
+
+  #handleAiUndo() {
+    this.#cancelRun();
   }
 
   #canAiAct(state) {
@@ -112,8 +122,13 @@ export default class AiTurnController {
 
   #clearMovePreview() {
     if (!this.#previewPoint) return;
-    EventBus.emit("ai preview cleared", this.#previewPoint);
+
+    if (this.#previewShown) {
+      EventBus.emit("clear ai preview", this.#previewPoint);
+    }
+
     this.#previewPoint = null;
+    this.#previewShown = false;
   }
 
   #pretendDelay(ms) {
@@ -122,17 +137,9 @@ export default class AiTurnController {
 
   #setPaused(isPaused) {
     this.#isPaused = isPaused;
-
     if (this.#isPaused) this.#clearMovePreview();
-
-    if (!this.#isPaused) {
-      const currentTurn = this.#turnManager.getCurrentTurn();
-      if (this.#shouldAiPlayTurn(currentTurn) && !this.#isThinking) {
-        this.#handleAiTurn({
-          getPhase: () => "playing",
-          getTurn: () => currentTurn,
-        });
-      }
+    if (!this.#isPaused && !this.#isThinking) {
+      this.#tryStartFromCurrentTurn();
     }
   }
 
