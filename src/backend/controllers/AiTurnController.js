@@ -12,8 +12,8 @@ export default class AiTurnController {
 
   #thinkToken = 0;
 
-  #thinkDelay = 250;
-  #nextTurnDelay = 250;
+  #thinkDelay = 500;
+  #nextTurnDelay = 500;
 
   constructor(turnManager, enemyAI) {
     this.#turnManager = turnManager;
