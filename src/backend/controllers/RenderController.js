@@ -69,12 +69,12 @@ export default class RenderController {
     this.clearBoard(this.#enemyCells);
 
     this.#targetBoard.querySelector("h2").textContent =
-      `${turn.getEnemyPlayer().getName()}'s board`;
+      `${turn.getEnemy().getName()}'s board`;
 
     const playerBoard = this.#playerBoard.querySelector(".gameboard");
 
     const activePlayer = turn.getPlayer();
-    const enemyPlayer = turn.getEnemyPlayer();
+    const enemyPlayer = turn.getEnemy();
 
     const isAIVsHuman = activePlayer.isAI() !== enemyPlayer.isAI();
     const aiIsActing = activePlayer.isAI();

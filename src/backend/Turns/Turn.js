@@ -22,7 +22,7 @@ export default class Turn {
     return this.#currPlayer;
   }
 
-  getEnemyPlayer() {
+  getEnemy() {
     return this.#enemyPlayer;
   }
   

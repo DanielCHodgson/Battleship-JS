@@ -12,13 +12,14 @@ export default class AiTurnController {
 
   #thinkToken = 0;
 
-  #thinkDelay = 750;
-  #nextTurnDelay = 750;
+  #thinkDelay = 250;
+  #nextTurnDelay = 250;
 
   constructor(turnManager, enemyAI) {
     this.#turnManager = turnManager;
     this.#enemyAI = enemyAI;
     this.#registerEvents();
+    this.#emitStatus();
   }
 
   #registerEvents() {
@@ -72,7 +73,7 @@ export default class AiTurnController {
 
   async #simulateThinking(aiMove, run) {
     this.#clearMovePreview();
-    this.#isThinking = true;
+    this.#setThinking(true);
 
     this.#previewPoint = aiMove;
     this.#previewShown = false;
@@ -87,7 +88,7 @@ export default class AiTurnController {
       await run.waitUntilResumed();
       await run.delay(this.#nextTurnDelay);
 
-      this.#isThinking = false;
+      this.#setThinking(false);
       this.#clearMovePreview();
 
       const turn = this.#turnManager.getCurrentTurn();
@@ -95,15 +96,28 @@ export default class AiTurnController {
       if (!this.#shouldAiPlayTurn(turn)) return;
 
       EventBus.emit("attack attempted", aiMove);
-    } catch (e) {
-      this.#isThinking = false;
+    } catch {
+      this.#setThinking(false);
       this.#clearMovePreview();
     }
   }
 
+  #emitStatus() {
+    EventBus.emit("ai status", {
+      isPaused: this.#isPaused,
+      isThinking: this.#isThinking,
+    });
+  }
+
+  #setThinking(isThinking) {
+    if (this.#isThinking === isThinking) return;
+    this.#isThinking = isThinking;
+    this.#emitStatus();
+  }
+
   #cancelRun() {
     this.#thinkToken++;
-    this.#isThinking = false;
+    this.#setThinking(false);
     this.#clearMovePreview();
   }
 
@@ -136,8 +150,13 @@ export default class AiTurnController {
   }
 
   #setPaused(isPaused) {
+    if (this.#isPaused === isPaused) return;
+
     this.#isPaused = isPaused;
     if (this.#isPaused) this.#clearMovePreview();
+
+    this.#emitStatus();
+
     if (!this.#isPaused && !this.#isThinking) {
       this.#tryStartFromCurrentTurn();
     }

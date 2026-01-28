@@ -7,7 +7,16 @@ import EventBus from "../../../../backend/utilities/EventBus";
 export default class Hud {
   #container;
   #element;
-  #fields = {};
+  #fields = {
+    buttons: null,
+    actionDisplay: null,
+    turnDisplay: null,
+    undoBtn: null,
+    redoBtn: null,
+    pauseBtn: null,
+  };
+
+  #aiPaused = false;
 
   constructor(container) {
     this.#container = container;
@@ -28,70 +37,109 @@ export default class Hud {
   }
 
   #initButtons() {
-    if (!this.#fields.buttons) return;
+    const { buttons } = this.#fields;
+    if (!buttons) return;
 
-    if (!this.#fields.buttons.querySelector("#undo")) {
-      new Button(this.#fields.buttons, "undo", "Undo", "undo");
-    }
+    this.#ensureButton("undo", "Undo", "undo");
+    this.#ensureButton("redo", "Redo", "redo");
+    this.#ensureButton("pause", "Pause AI", "togglePause");
 
-    if (!this.#fields.buttons.querySelector("#pause")) {
-      new Button(this.#fields.buttons, "pause", "Pause AI", "togglePause");
-    }
+    this.#fields.undoBtn = buttons.querySelector("#undo");
+    this.#fields.redoBtn = buttons.querySelector("#redo");
+    this.#fields.pauseBtn = buttons.querySelector("#pause");
+  }
 
-    this.#fields.undoBtn = this.#fields.buttons.querySelector("#undo");
-    this.#fields.pauseBtn = this.#fields.buttons.querySelector("#pause");
-
-    this.#fields.pauseBtn.addEventListener("click", () => {
-      const isPaused = this.#fields.pauseBtn.classList.toggle("is-active");
-      this.#fields.pauseBtn.textContent = isPaused ? "Resume AI" : "Pause AI";
-    });
+  #ensureButton(id, label, eventName) {
+    const { buttons } = this.#fields;
+    if (!buttons || buttons.querySelector(`#${id}`)) return;
+    new Button(buttons, id, label, eventName);
   }
 
   #registerEvents() {
     EventBus.on("state changed", (state) => this.renderState(state));
+    EventBus.on("ai status", (status) => this.renderAiStatus(status));
+  }
+
+  renderAiStatus(status) {
+    if (!status) return;
+    this.#aiPaused = status.isPaused;
+    this.#renderPauseUi();
   }
 
   renderState(state) {
     if (!state) return;
 
-    const turn = state.getTurn?.();
-    const phase = state.getPhase?.();
+    const turn = state.getTurn();
+    const phase = state.getPhase();
 
     if (!turn) {
-      this.#fields.turnDisplay.textContent = "";
-      this.#fields.actionDisplay.textContent = "";
-      this.#fields.actionDisplay.classList.remove("is-alert");
+      this.#resetTurnUi();
       return;
     }
 
-    this.renderTurnInfo(turn);
-    this.renderActionInfo(turn, phase);
+    this.#renderButtons(state, turn, phase);
+    this.#renderPauseUi();
+    this.#renderTurnInfo(turn);
+    this.#renderActionInfo(turn, phase);
   }
 
-  renderTurnInfo(turn) {
-    const round = turn.getRound?.() ?? "";
-    const playerName = turn.getPlayer?.()?.getName?.() ?? "";
-    this.#fields.turnDisplay.textContent = `Turn ${round} — ${playerName}`;
+  #resetTurnUi() {
+    const { turnDisplay, actionDisplay } = this.#fields;
+    if (turnDisplay) turnDisplay.textContent = "";
+    if (actionDisplay) {
+      actionDisplay.textContent = "";
+      actionDisplay.classList.remove("is-alert");
+    }
   }
 
-  renderActionInfo(turn, phase) {
-    const playerName = turn.getPlayer?.()?.getName?.() ?? "";
-    const round = turn.getRound?.() ?? "";
+  #renderButtons(state, turn, phase) {
+    const { undoBtn, redoBtn, pauseBtn } = this.#fields;
 
-    this.#fields.actionDisplay.classList.remove("is-alert");
+    undoBtn.classList.toggle("disabled", !state.canUndo());
+    redoBtn.classList.toggle("disabled", !state.canRedo());
+
+    const bothHuman = !turn.getPlayer().isAI() && !turn.getEnemy().isAI();
+    pauseBtn.classList.toggle("disabled", phase === "gameover");
+    pauseBtn.classList.toggle("hidden", bothHuman);
+  }
+
+  #renderPauseUi() {
+    const { pauseBtn } = this.#fields;
+    if (!pauseBtn) return;
+    pauseBtn.classList.toggle("is-active", this.#aiPaused);
+    pauseBtn.textContent = this.#aiPaused ? "Resume AI" : "Pause AI";
+  }
+
+  #renderTurnInfo(turn) {
+    const { turnDisplay } = this.#fields;
+    if (!turnDisplay) return;
+
+    const round = turn.getRound();
+    const playerName = turn.getPlayer().getName();
+    turnDisplay.textContent = `Turn ${round} — ${playerName}`;
+  }
+
+  #renderActionInfo(turn, phase) {
+    const { actionDisplay } = this.#fields;
+    if (!actionDisplay) return;
+
+    const playerName = turn.getPlayer().getName();
+    const round = turn.getRound();
+
+    actionDisplay.classList.remove("is-alert");
 
     if (phase === "gameover") {
-      this.#fields.actionDisplay.textContent = `Game Over — ${playerName} won in ${round} turns.`;
-      this.#fields.actionDisplay.classList.add("is-alert");
+      actionDisplay.textContent = `Game Over — ${playerName} won in ${round} turns.`;
+      actionDisplay.classList.add("is-alert");
       return;
     }
 
-    if (turn.hasAttacked?.()) {
-      this.#fields.actionDisplay.textContent = `${playerName} has attacked.`;
+    if (turn.hasAttacked()) {
+      actionDisplay.textContent = `${playerName} has attacked.`;
       return;
     }
 
-    this.#fields.actionDisplay.textContent = "Pick a target square.";
+    actionDisplay.textContent = "Pick a target square.";
   }
 
   render() {

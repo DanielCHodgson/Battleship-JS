@@ -1,5 +1,4 @@
 import Player from "../entities/Player";
-import Ship from "../entities/Ship";
 import EventBus from "../utilities/EventBus";
 import TurnManager from "../Turns/TurnManager";
 import GameState from "../Turns/GameState";
@@ -19,13 +18,16 @@ export default class GameController {
   #players = {};
   #turnManager;
   #commandHistory = [];
+  #commandRedoStack = [];
   #phase = "playing";
   #shipFactory;
 
   constructor() {
     this.#turnManager = new TurnManager();
     this.#shipFactory = new ShipFactory();
+
     new AiTurnController(this.#turnManager, new AiMoveCalculator());
+
     this.#registerEvents();
   }
 
@@ -34,16 +36,10 @@ export default class GameController {
       this.#setupPage.destroy();
       this.startGame(playerDetails);
     });
+
     EventBus.on("attack attempted", (point) => this.handleAttack(point));
     EventBus.on("undo", () => this.undoLastCommand());
-
-    // Kept for debugging
-    /* 
-      EventBus.on("next turn", () => {
-        if (this.#phase === "playing") {
-        this.executeCommand(new NextTurnCommand(this.#turnManager));
-      }}); 
-    */
+    EventBus.on("redo", () => this.redoCommand());
   }
 
   launchGame() {
@@ -51,6 +47,10 @@ export default class GameController {
   }
 
   startGame(playerDetails) {
+    this.#commandHistory = [];
+    this.#commandRedoStack = [];
+    this.#phase = "playing";
+
     if (!this.#players.player1 || !this.#players.player2) {
       this.#initTestGame(playerDetails);
     }
@@ -84,15 +84,25 @@ export default class GameController {
     const command = this.#commandHistory.pop();
     if (!command) return;
 
+    this.#commandRedoStack.push(command);
     command.undo();
     this.emitState();
   }
 
-  executeCommand(command) {
+  redoCommand() {
+    const command = this.#commandRedoStack.pop();
+    if (!command) return;
+
+    this.executeCommand(command, { fromRedo: true });
+    this.emitState();
+  }
+
+  executeCommand(command, { fromRedo = false } = {}) {
+    if (!fromRedo) this.#commandRedoStack.length = 0;
+
     const result = command.execute();
-    if (result !== false) {
-      this.#commandHistory.push(command);
-    }
+    if (result !== false) this.#commandHistory.push(command);
+
     return result;
   }
 
@@ -103,31 +113,11 @@ export default class GameController {
         turn: this.#turnManager.getCurrentTurn(),
         turnNumber: this.#turnManager.getTurnNumber(),
         phase: this.#phase,
+        canUndo: this.#commandHistory.length > 0,
+        canRedo: this.#commandRedoStack.length > 0,
       }),
     );
   }
-
-  gameIsWon(board) {
-    return board.getShips().every((ship) => ship.isSunk());
-  }
-
-  setPlayers(player1, player2) {
-    this.#players = { player1, player2 };
-  }
-
-  getPlayers() {
-    return this.#players;
-  }
-
-  getPhase() {
-    return this.#phase;
-  }
-
-  setPhase(phase) {
-    this.#phase = phase;
-  }
-
-  // Dev / Testing utility
 
   #initTestGame(playerDetails) {
     const player1 = this.#initTestPlayer(
@@ -144,7 +134,6 @@ export default class GameController {
 
   #initTestPlayer(name, isAi) {
     const ships = this.#shipFactory.createFleet();
-
     const player = new Player(name, isAi);
 
     ships.forEach((ship) => {
@@ -164,11 +153,31 @@ export default class GameController {
       };
 
       const direction = Math.random() < 0.5 ? "horizontal" : "vertical";
-
       const result = board.placeShip(ship, point, direction);
+
       if (result.ok) return true;
     }
 
     throw new Error(`Failed to place ship ${ship.getName()}`);
+  }
+
+  setPlayers(player1, player2) {
+    this.#players = { player1, player2 };
+  }
+
+  getPlayers() {
+    return this.#players;
+  }
+
+  getPhase() {
+    return this.#phase;
+  }
+
+  setPhase(phase) {
+    this.#phase = phase;
+  }
+
+  gameIsWon(board) {
+    return board.getShips().every((ship) => ship.isSunk());
   }
 }
