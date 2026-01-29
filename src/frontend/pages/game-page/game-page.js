@@ -31,7 +31,6 @@ export default class GamePage {
 
   open() {
     this.render();
-
     this.#cacheFields();
 
     this.#hudComponent = new Hud(this.#display);
@@ -68,6 +67,11 @@ export default class GamePage {
       this.#buttons.removeEventListener("click", this.#handlers.onButtonsClick);
     }
 
+    this.#hudComponent.destroy();
+    this.#boardComponent1.destroy();
+    this.#boardComponent2.destroy();
+    this.#renderController.destroy();
+
     if (this.#element?.parentNode) {
       this.#element.parentNode.removeChild(this.#element);
     }
@@ -77,12 +81,10 @@ export default class GamePage {
     this.#hudComponent = null;
     this.#boardComponent1 = null;
     this.#boardComponent2 = null;
-
     this.#display = null;
     this.#board1 = null;
     this.#board2 = null;
     this.#buttons = null;
-
     this.#element = null;
     this.#container = null;
   }

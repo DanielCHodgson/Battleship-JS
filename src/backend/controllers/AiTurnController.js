@@ -15,17 +15,26 @@ export default class AiTurnController {
   #thinkDelay = 500;
   #nextTurnDelay = 500;
 
+  #onStateChanged;
+  #onUndo;
+  #onTogglePause;
+
   constructor(turnManager, enemyAI) {
     this.#turnManager = turnManager;
     this.#enemyAI = enemyAI;
+
+    this.#onStateChanged = (state) => this.#handleAiTurn(state);
+    this.#onUndo = () => this.#handleAiUndo();
+    this.#onTogglePause = () => this.#togglePause();
+
     this.#registerEvents();
     this.#emitStatus();
   }
 
   #registerEvents() {
-    EventBus.on("state changed", (state) => this.#handleAiTurn(state));
-    EventBus.on("undo", () => this.#handleAiUndo());
-    EventBus.on("togglePause", () => this.#togglePause());
+    EventBus.on("state changed", this.#onStateChanged);
+    EventBus.on("undo", this.#onUndo);
+    EventBus.on("togglePause", this.#onTogglePause);
   }
 
   #handleAiTurn(state) {
@@ -164,5 +173,18 @@ export default class AiTurnController {
 
   #togglePause() {
     this.#setPaused(!this.#isPaused);
+  }
+
+  destroy() {
+    this.#cancelRun();
+    EventBus.off("state changed", this.#onStateChanged);
+    EventBus.off("undo", this.#onUndo);
+    EventBus.off("togglePause", this.#onTogglePause);
+
+    this.#onStateChanged = null;
+    this.#onUndo = null;
+    this.#onTogglePause = null;
+    this.#turnManager = null;
+    this.#enemyAI = null;
   }
 }

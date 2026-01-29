@@ -17,29 +17,48 @@ export default class GameController {
 
   #players = {};
   #turnManager;
+  #aiTurnController;
+
   #commandHistory = [];
   #commandRedoStack = [];
   #phase = "playing";
   #shipFactory;
 
+  #onSetupSubmitted;
+  #onAttackAttempted;
+  #onUndo;
+  #onRedo;
+  #onRestart;
+
   constructor() {
     this.#turnManager = new TurnManager();
     this.#shipFactory = new ShipFactory();
 
-    new AiTurnController(this.#turnManager, new AiMoveCalculator());
+    this.#aiTurnController = new AiTurnController(
+      this.#turnManager,
+      new AiMoveCalculator(),
+    );
+
+    this.#onSetupSubmitted = (playerDetails) => {
+      this.#setupPage.destroy();
+      this.#setupPage = null;
+      this.startGame(playerDetails);
+    };
+
+    this.#onAttackAttempted = (point) => this.handleAttack(point);
+    this.#onUndo = () => this.undoLastCommand();
+    this.#onRedo = () => this.redoCommand();
+    this.#onRestart = () => this.restartGame();
 
     this.#registerEvents();
   }
 
   #registerEvents() {
-    EventBus.on("setup submitted", (playerDetails) => {
-      this.#setupPage.destroy();
-      this.startGame(playerDetails);
-    });
-
-    EventBus.on("attack attempted", (point) => this.handleAttack(point));
-    EventBus.on("undo", () => this.undoLastCommand());
-    EventBus.on("redo", () => this.redoCommand());
+    EventBus.on("setup submitted", this.#onSetupSubmitted);
+    EventBus.on("attack attempted", this.#onAttackAttempted);
+    EventBus.on("undo", this.#onUndo);
+    EventBus.on("redo", this.#onRedo);
+    EventBus.on("restart", this.#onRestart);
   }
 
   launchGame() {
@@ -47,21 +66,62 @@ export default class GameController {
   }
 
   startGame(playerDetails) {
-    this.#commandHistory = [];
-    this.#commandRedoStack = [];
+    this.#resetCommandHistory();
     this.#phase = "playing";
 
     if (!this.#players.player1 || !this.#players.player2) {
       this.#initTestGame(playerDetails);
     }
 
-    this.#gamePage = new GamePage();
-    this.#gamePage.open();
+    this.#openGamePage();
 
     const { player1, player2 } = this.#players;
-
     this.#turnManager.initialize(player1, player2);
+
     this.emitState();
+  }
+
+  restartGame() {
+    this.#aiTurnController.destroy();
+    this.#gamePage.destroy();
+
+    this.#turnManager = new TurnManager();
+    this.#aiTurnController = new AiTurnController(
+      this.#turnManager,
+      new AiMoveCalculator(),
+    );
+
+    this.#resetCommandHistory();
+    this.#phase = "playing";
+
+    const player1 = this.#createNewPlayerFrom(this.#players.player1);
+    const player2 = this.#createNewPlayerFrom(this.#players.player2);
+    this.#populateFleetRandom(player1);
+    this.#populateFleetRandom(player2);
+
+    this.setPlayers(player1, player2);
+    this.#turnManager.initialize(player1, player2);
+    this.#openGamePage();
+    this.emitState();
+  }
+
+  #openGamePage() {
+    this.#gamePage = new GamePage();
+    this.#gamePage.open();
+  }
+
+  #resetCommandHistory() {
+    this.#commandHistory = [];
+    this.#commandRedoStack = [];
+  }
+
+  #createNewPlayerFrom(existingPlayer) {
+    return new Player(existingPlayer.getName(), existingPlayer.isAI());
+  }
+
+  #populateFleetRandom(player) {
+    const ships = this.#shipFactory.createFleet();
+    ships.forEach((ship) => this.#placeShipAtRandom(ship, player.getBoard()));
   }
 
   handleAttack(point) {
@@ -133,13 +193,8 @@ export default class GameController {
   }
 
   #initTestPlayer(name, isAi) {
-    const ships = this.#shipFactory.createFleet();
     const player = new Player(name, isAi);
-
-    ships.forEach((ship) => {
-      this.#placeShipAtRandom(ship, player.getBoard());
-    });
-
+    this.#populateFleetRandom(player);
     return player;
   }
 
@@ -179,5 +234,23 @@ export default class GameController {
 
   gameIsWon(board) {
     return board.getShips().every((ship) => ship.isSunk());
+  }
+
+  destroy() {
+    EventBus.off("setup submitted", this.#onSetupSubmitted);
+    EventBus.off("attack attempted", this.#onAttackAttempted);
+    EventBus.off("undo", this.#onUndo);
+    EventBus.off("redo", this.#onRedo);
+    EventBus.off("restart", this.#onRestart);
+
+    this.#aiTurnController.destroy();
+    this.#gamePage.destroy();
+    this.#setupPage.destroy();
+
+    this.#aiTurnController = null;
+    this.#gamePage = null;
+    this.#setupPage = null;
+    this.#turnManager = null;
+    this.#players = {};
   }
 }

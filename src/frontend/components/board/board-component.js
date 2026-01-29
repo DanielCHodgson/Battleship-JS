@@ -6,6 +6,7 @@ import EventBus from "../../../backend/utilities/EventBus";
 export default class BoardComponent {
   #container;
   #element;
+  #squareHandlers = new Map();
 
   constructor(container) {
     this.#container = container;
@@ -24,39 +25,37 @@ export default class BoardComponent {
         square.dataset.row = row;
         square.dataset.col = col;
 
-        square.addEventListener("click", () => {
+        const onClick = () => {
           EventBus.emit("attack attempted", {
             x: col,
             y: row,
           });
-        });
+        };
+
+        square.addEventListener("click", onClick);
+        this.#squareHandlers.set(square, onClick);
 
         squares.push(square);
       }
     }
-
     this.#element.append(...squares);
-  }
-
-  markShip(x, y) {
-    this.#findSquare(x, y)?.classList.add("ship");
-  }
-
-  markHit(x, y) {
-    this.#findSquare(x, y)?.classList.add("hit");
-  }
-
-  markMiss(x, y) {
-    this.#findSquare(x, y)?.classList.add("miss");
-  }
-
-  #findSquare(x, y) {
-    return this.#element.querySelector(
-      `.square[data-row="${y}"][data-col="${x}"]`,
-    );
   }
 
   getElement() {
     return this.#element;
+  }
+
+  destroy() {
+    this.#squareHandlers.forEach((handler, square) => {
+      square.removeEventListener("click", handler);
+    });
+    this.#squareHandlers.clear();
+
+    if (this.#element?.parentNode) {
+      this.#element.parentNode.removeChild(this.#element);
+    }
+
+    this.#container = null;
+    this.#element = null;
   }
 }

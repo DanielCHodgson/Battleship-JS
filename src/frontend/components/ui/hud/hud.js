@@ -14,9 +14,13 @@ export default class Hud {
     undoBtn: null,
     redoBtn: null,
     pauseBtn: null,
+    restartBtn: null,
   };
 
   #aiPaused = false;
+
+  #onStateChanged;
+  #onAiStatus;
 
   constructor(container) {
     this.#container = container;
@@ -25,6 +29,10 @@ export default class Hud {
     this.#cacheFields();
     this.render();
     this.#initButtons();
+
+    this.#onStateChanged = (state) => this.renderState(state);
+    this.#onAiStatus = (status) => this.renderAiStatus(status);
+
     this.#registerEvents();
   }
 
@@ -40,24 +48,26 @@ export default class Hud {
     const { buttons } = this.#fields;
     if (!buttons) return;
 
-    this.#ensureButton("undo", "Undo", "undo");
-    this.#ensureButton("redo", "Redo", "redo");
-    this.#ensureButton("pause", "Pause AI", "togglePause");
+    this.#initButton("undo", "Undo", "undo");
+    this.#initButton("redo", "Redo", "redo");
+    this.#initButton("pause", "Pause AI", "togglePause");
+    this.#initButton("restart", "Restart", "restart");
 
     this.#fields.undoBtn = buttons.querySelector("#undo");
     this.#fields.redoBtn = buttons.querySelector("#redo");
     this.#fields.pauseBtn = buttons.querySelector("#pause");
+    this.#fields.restartBtn = buttons.querySelector("#restart");
   }
 
-  #ensureButton(id, label, eventName) {
+  #initButton(id, label, eventName) {
     const { buttons } = this.#fields;
     if (!buttons || buttons.querySelector(`#${id}`)) return;
     new Button(buttons, id, label, eventName);
   }
 
   #registerEvents() {
-    EventBus.on("state changed", (state) => this.renderState(state));
-    EventBus.on("ai status", (status) => this.renderAiStatus(status));
+    EventBus.on("state changed", this.#onStateChanged);
+    EventBus.on("ai status", this.#onAiStatus);
   }
 
   renderAiStatus(status) {
@@ -94,6 +104,7 @@ export default class Hud {
 
   #renderButtons(state, turn, phase) {
     const { undoBtn, redoBtn, pauseBtn } = this.#fields;
+    if (!undoBtn || !redoBtn || !pauseBtn) return;
 
     undoBtn.classList.toggle("disabled", !state.canUndo());
     redoBtn.classList.toggle("disabled", !state.canRedo());
@@ -146,5 +157,32 @@ export default class Hud {
     if (!this.#element.isConnected) {
       this.#container.appendChild(this.#element);
     }
+  }
+
+  destroy() {
+    if (this.#onStateChanged)
+      EventBus.off("state changed", this.#onStateChanged);
+    if (this.#onAiStatus) EventBus.off("ai status", this.#onAiStatus);
+
+    if (this.#element?.parentNode) {
+      this.#element.parentNode.removeChild(this.#element);
+    }
+
+    this.#onStateChanged = null;
+    this.#onAiStatus = null;
+
+    this.#fields = {
+      buttons: null,
+      actionDisplay: null,
+      turnDisplay: null,
+      undoBtn: null,
+      redoBtn: null,
+      pauseBtn: null,
+      restartBtn: null,
+    };
+
+    this.#container = null;
+    this.#element = null;
+    this.#aiPaused = false;
   }
 }
