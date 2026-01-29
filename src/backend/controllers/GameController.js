@@ -1,4 +1,3 @@
-import Player from "../entities/Player";
 import EventBus from "../utilities/EventBus";
 import TurnManager from "../Turns/TurnManager";
 import GameState from "../Turns/GameState";
@@ -7,9 +6,11 @@ import CompositeCommand from "../commands/CompositeCommand";
 import ResolveTurnCommand from "../commands/ResolveTurnCommand";
 import AiMoveCalculator from "./AiMoveCalculator";
 import AiTurnController from "./AiTurnController";
-import ShipFactory from "../entities/ShipFactory";
+import ShipFactory from "../factories/ShipFactory";
 import SetupPage from "../../frontend/pages/setup-page/setup-page";
 import GamePage from "../../frontend/pages/game-page/game-page";
+import CommandHistory from "../commands/CommandHistory";
+import GameSessionFactory from "../factories/GameSessionFactory";
 
 export default class GameController {
   #setupPage;
@@ -18,9 +19,9 @@ export default class GameController {
   #players = {};
   #turnManager;
   #aiTurnController;
+  #commandHistory;
+  #gameSessionFactory;
 
-  #commandHistory = [];
-  #commandRedoStack = [];
   #phase = "playing";
   #shipFactory;
 
@@ -31,8 +32,10 @@ export default class GameController {
   #onRestart;
 
   constructor() {
+    this.#commandHistory = new CommandHistory(this);
     this.#turnManager = new TurnManager();
     this.#shipFactory = new ShipFactory();
+    this.#gameSessionFactory = new GameSessionFactory(this.#shipFactory);
 
     this.#aiTurnController = new AiTurnController(
       this.#turnManager,
@@ -46,8 +49,10 @@ export default class GameController {
     };
 
     this.#onAttackAttempted = (point) => this.handleAttack(point);
-    this.#onUndo = () => this.undoLastCommand();
-    this.#onRedo = () => this.redoCommand();
+    this.#onUndo = () => this.#commandHistory.undoLastCommand();
+    this.#onRedo = () => {
+      this.#commandHistory.redoCommand();
+    };
     this.#onRestart = () => this.restartGame();
 
     this.#registerEvents();
@@ -66,18 +71,16 @@ export default class GameController {
   }
 
   startGame(playerDetails) {
-    this.#resetCommandHistory();
+    this.#commandHistory.reset();
     this.#phase = "playing";
 
     if (!this.#players.player1 || !this.#players.player2) {
-      this.#initTestGame(playerDetails);
+      this.#players =
+        this.#gameSessionFactory.createPlayersFromDetails(playerDetails);
     }
 
     this.#openGamePage();
-
-    const { player1, player2 } = this.#players;
-    this.#turnManager.initialize(player1, player2);
-
+    this.#turnManager.initialize(this.#players);
     this.emitState();
   }
 
@@ -91,37 +94,16 @@ export default class GameController {
       new AiMoveCalculator(),
     );
 
-    this.#resetCommandHistory();
+    this.#commandHistory.reset();
     this.#phase = "playing";
 
-    const player1 = this.#createNewPlayerFrom(this.#players.player1);
-    const player2 = this.#createNewPlayerFrom(this.#players.player2);
-    this.#populateFleetRandom(player1);
-    this.#populateFleetRandom(player2);
+    this.#players = this.#gameSessionFactory.recreatePlayersFromExisting(
+      this.#players,
+    );
 
-    this.setPlayers(player1, player2);
-    this.#turnManager.initialize(player1, player2);
+    this.#turnManager.initialize(this.#players);
     this.#openGamePage();
     this.emitState();
-  }
-
-  #openGamePage() {
-    this.#gamePage = new GamePage();
-    this.#gamePage.open();
-  }
-
-  #resetCommandHistory() {
-    this.#commandHistory = [];
-    this.#commandRedoStack = [];
-  }
-
-  #createNewPlayerFrom(existingPlayer) {
-    return new Player(existingPlayer.getName(), existingPlayer.isAI());
-  }
-
-  #populateFleetRandom(player) {
-    const ships = this.#shipFactory.createFleet();
-    ships.forEach((ship) => this.#placeShipAtRandom(ship, player.getBoard()));
   }
 
   handleAttack(point) {
@@ -136,34 +118,13 @@ export default class GameController {
       new ResolveTurnCommand(this.#turnManager, this),
     ]);
 
-    const result = this.executeCommand(move);
+    const result = this.#commandHistory.executeCommand(move);
     if (result !== false) this.emitState();
   }
 
-  undoLastCommand() {
-    const command = this.#commandHistory.pop();
-    if (!command) return;
-
-    this.#commandRedoStack.push(command);
-    command.undo();
-    this.emitState();
-  }
-
-  redoCommand() {
-    const command = this.#commandRedoStack.pop();
-    if (!command) return;
-
-    this.executeCommand(command, { fromRedo: true });
-    this.emitState();
-  }
-
-  executeCommand(command, { fromRedo = false } = {}) {
-    if (!fromRedo) this.#commandRedoStack.length = 0;
-
-    const result = command.execute();
-    if (result !== false) this.#commandHistory.push(command);
-
-    return result;
+  #openGamePage() {
+    this.#gamePage = new GamePage();
+    this.#gamePage.open();
   }
 
   emitState() {
@@ -173,47 +134,10 @@ export default class GameController {
         turn: this.#turnManager.getCurrentTurn(),
         turnNumber: this.#turnManager.getTurnNumber(),
         phase: this.#phase,
-        canUndo: this.#commandHistory.length > 0,
-        canRedo: this.#commandRedoStack.length > 0,
+        canUndo: this.#commandHistory.canUndo(),
+        canRedo: this.#commandHistory.canRedo(),
       }),
     );
-  }
-
-  #initTestGame(playerDetails) {
-    const player1 = this.#initTestPlayer(
-      playerDetails.player1.name,
-      playerDetails.player1.isAI,
-    );
-    const player2 = this.#initTestPlayer(
-      playerDetails.player2.name,
-      playerDetails.player2.isAI,
-    );
-
-    this.setPlayers(player1, player2);
-  }
-
-  #initTestPlayer(name, isAi) {
-    const player = new Player(name, isAi);
-    this.#populateFleetRandom(player);
-    return player;
-  }
-
-  #placeShipAtRandom(ship, board, maxAttempts = 100) {
-    const size = board.getSize();
-
-    for (let i = 0; i < maxAttempts; i++) {
-      const point = {
-        x: Math.floor(Math.random() * size),
-        y: Math.floor(Math.random() * size),
-      };
-
-      const direction = Math.random() < 0.5 ? "horizontal" : "vertical";
-      const result = board.placeShip(ship, point, direction);
-
-      if (result.ok) return true;
-    }
-
-    throw new Error(`Failed to place ship ${ship.getName()}`);
   }
 
   setPlayers(player1, player2) {

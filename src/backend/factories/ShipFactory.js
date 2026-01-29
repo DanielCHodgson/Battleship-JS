@@ -1,4 +1,4 @@
-import Ship from "./Ship";
+import Ship from "../entities/Ship";
 
 export default class ShipFactory {
   #shipTypes = {

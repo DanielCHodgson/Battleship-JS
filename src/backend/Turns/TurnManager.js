@@ -7,10 +7,10 @@ export default class TurnManager {
 
   constructor() {}
 
-  initialize(player1, player2) {
-    this.#player1 = player1;
-    this.#player2 = player2;
-    this.#turns = [new Turn(1, player1, player2)];
+  initialize(players) {
+    this.#player1 = players.player1;
+    this.#player2 = players.player2;
+    this.#turns = [new Turn(1, this.#player1, this.#player2)];
   }
 
   nextTurn() {
