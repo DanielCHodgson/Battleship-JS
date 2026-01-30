@@ -49,6 +49,10 @@ export default class Ship {
     this.#positions = positions;
   }
 
+  clearPositions() {
+    this.#positions.length = 0;
+  }
+
   clone() {
     const clonedShip = new Ship(this.#name, this.#length);
     clonedShip.#positions = this.#positions.map((pos) => ({ ...pos }));

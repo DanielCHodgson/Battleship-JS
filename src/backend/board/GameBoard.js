@@ -1,3 +1,5 @@
+import Ship from "../entities/Ship";
+
 export default class Gameboard {
   #size;
   #misses;
@@ -11,23 +13,70 @@ export default class Gameboard {
     this.#ships = [];
   }
 
-  placeShip(ship, point, direction = "horizontal") {
-    const positions = [point];
-
-    for (let i = 1; i < ship.getLength(); i++) {
-      positions.push(
-        direction === "horizontal"
-          ? { x: point.x + i, y: point.y }
-          : { x: point.x, y: point.y + i },
-      );
+  static fromDeployment({ size = 10, ships }) {
+    if (!Array.isArray(ships)) {
+      throw new Error("Deployment must include a ships array");
     }
+
+    const board = new Gameboard(size);
+
+    for (const { name, length, positions } of ships) {
+  
+      const ship = new Ship(name, length);
+      ship.setPositions(positions.map((point) => ({ x: point.x, y: point.y })));
+
+      board.getShips().push(ship);
+    }
+
+    return board;
+  }
+
+  placeShip(ship, point, direction = "horizontal") {
+    if (this.#alreadyPlaced(ship)) {
+      return { ok: false, reason: "ship-type-already-placed" };
+    }
+
+    const positions = this.#buildPositions(ship, point, direction);
 
     if (!positions.every((pos) => this.isInBounds(pos))) {
       return { ok: false, reason: "ship-out-of-bounds" };
     }
 
+    if (this.#overlaps(positions)) {
+      return { ok: false, reason: "ship-overlaps" };
+    }
+
     ship.setPositions(positions);
     this.#ships.push(ship);
+    return { ok: true };
+  }
+
+  placeShipAtRandom(ship, maxAttempts = 100) {
+    const size = this.#size;
+
+    for (let i = 0; i < maxAttempts; i++) {
+      const point = {
+        x: Math.floor(Math.random() * size),
+        y: Math.floor(Math.random() * size),
+      };
+      const direction = Math.random() < 0.5 ? "horizontal" : "vertical";
+      const result = this.placeShip(ship, point, direction);
+      if (result.ok) return true;
+    }
+
+    throw new Error(`Failed to place ship ${ship.getName()}`);
+  }
+
+  removeShip(ship) {
+    if (!ship) return { ok: false, reason: "no-ship-in-argument" };
+
+    const before = this.#ships.length;
+    this.#ships = this.#ships.filter((s) => s.getName() !== ship.getName());
+
+    if (this.#ships.length === before) {
+      return { ok: false, reason: "ship-not-found" };
+    }
+
     return { ok: true };
   }
 
@@ -101,5 +150,27 @@ export default class Gameboard {
 
   getSize() {
     return this.#size;
+  }
+
+  #alreadyPlaced(ship) {
+    return this.#ships.some((s) => s.getName() === ship.getName());
+  }
+
+  #overlaps(positions) {
+    return positions.some((pos) => this.#ships.some((s) => s.collides(pos)));
+  }
+
+  #buildPositions(ship, point, direction) {
+    const positions = [{ ...point }];
+
+    for (let i = 1; i < ship.getLength(); i++) {
+      positions.push(
+        direction === "horizontal"
+          ? { x: point.x + i, y: point.y }
+          : { x: point.x, y: point.y + i },
+      );
+    }
+
+    return positions;
   }
 }

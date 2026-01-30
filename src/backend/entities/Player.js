@@ -1,14 +1,12 @@
-import Gameboard from "../board/Gameboard";
-
 export default class Player {
   #name = null;
   #isAI = false;
   #board = null;
 
-  constructor(name, isAI) {
+  constructor(name, isAI, board) {
     this.#name = name;
     this.#isAI = isAI;
-    this.#board = new Gameboard();
+    this.#board = board;
   }
 
   getBoard() {

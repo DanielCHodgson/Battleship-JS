@@ -6,24 +6,27 @@ import CompositeCommand from "../commands/CompositeCommand";
 import ResolveTurnCommand from "../commands/ResolveTurnCommand";
 import AiMoveCalculator from "./AiMoveCalculator";
 import AiTurnController from "./AiTurnController";
-import ShipFactory from "../factories/ShipFactory";
 import SetupPage from "../../frontend/pages/setup-page/setup-page";
 import GamePage from "../../frontend/pages/game-page/game-page";
 import CommandHistory from "../commands/CommandHistory";
-import GameSessionFactory from "../factories/GameSessionFactory";
+import PlayerFactory from "../factories/PlayerFactory";
+import DeploymentSession from "./DeploymentSession";
+import GameBoard from "../board/Gameboard";
 
 export default class GameController {
   #setupPage;
   #gamePage;
+  #deploymentPage;
+  #deploymentSession1;
+  #deploymentSession2;
 
   #players = {};
   #turnManager;
   #aiTurnController;
   #commandHistory;
-  #gameSessionFactory;
+  #playerFactory;
 
   #phase = "playing";
-  #shipFactory;
 
   #onSetupSubmitted;
   #onAttackAttempted;
@@ -32,11 +35,11 @@ export default class GameController {
   #onRestart;
 
   constructor() {
+    this.#deploymentSession1 = new DeploymentSession();
+    this.#deploymentSession2 = new DeploymentSession();
+    this.#playerFactory = new PlayerFactory();
     this.#commandHistory = new CommandHistory(this);
     this.#turnManager = new TurnManager();
-    this.#shipFactory = new ShipFactory();
-    this.#gameSessionFactory = new GameSessionFactory(this.#shipFactory);
-
     this.#aiTurnController = new AiTurnController(
       this.#turnManager,
       new AiMoveCalculator(),
@@ -45,7 +48,7 @@ export default class GameController {
     this.#onSetupSubmitted = (playerDetails) => {
       this.#setupPage.destroy();
       this.#setupPage = null;
-      this.startGame(playerDetails);
+      this.startDeployment(playerDetails);
     };
 
     this.#onAttackAttempted = (point) => this.handleAttack(point);
@@ -60,7 +63,8 @@ export default class GameController {
 
   #registerEvents() {
     EventBus.on("setup submitted", this.#onSetupSubmitted);
-    EventBus.on("attack attempted", this.#onAttackAttempted);
+    EventBus.on("deployment completed", this.#onSetupSubmitted);
+    EventBus.on("point selected", this.#onAttackAttempted);
     EventBus.on("undo", this.#onUndo);
     EventBus.on("redo", this.#onRedo);
     EventBus.on("restart", this.#onRestart);
@@ -70,13 +74,31 @@ export default class GameController {
     this.#setupPage = new SetupPage(document.querySelector(".app-wrapper"));
   }
 
+  startDeployment(playerDetails) {
+    this.#phase = "deploying";
+
+    this.#deploymentSession1.randomize();
+    const result1 = this.#deploymentSession1.buildResult();
+
+    this.#deploymentSession2.randomize();
+    const result2 = this.#deploymentSession1.buildResult();
+
+    const board1 = GameBoard.fromDeployment(result1.deployment);
+    const board2 = GameBoard.fromDeployment(result2.deployment);
+
+    playerDetails.player1.board = board1;
+    playerDetails.player1.board = board2;
+
+    this.startGame(playerDetails);
+  }
+
   startGame(playerDetails) {
     this.#commandHistory.reset();
     this.#phase = "playing";
 
     if (!this.#players.player1 || !this.#players.player2) {
       this.#players =
-        this.#gameSessionFactory.createPlayersFromDetails(playerDetails);
+        this.#playerFactory.createPlayersFromDetails(playerDetails);
     }
 
     this.#openGamePage();
@@ -97,7 +119,7 @@ export default class GameController {
     this.#commandHistory.reset();
     this.#phase = "playing";
 
-    this.#players = this.#gameSessionFactory.recreatePlayersFromExisting(
+    this.#players = this.#playerFactory.recreatePlayersFromExisting(
       this.#players,
     );
 
@@ -162,7 +184,7 @@ export default class GameController {
 
   destroy() {
     EventBus.off("setup submitted", this.#onSetupSubmitted);
-    EventBus.off("attack attempted", this.#onAttackAttempted);
+    EventBus.off("point selected", this.#onAttackAttempted);
     EventBus.off("undo", this.#onUndo);
     EventBus.off("redo", this.#onRedo);
     EventBus.off("restart", this.#onRestart);

@@ -104,7 +104,7 @@ export default class AiTurnController {
       run.check();
       if (!this.#shouldAiPlayTurn(turn)) return;
 
-      EventBus.emit("attack attempted", aiMove);
+      EventBus.emit("point selected", aiMove);
     } catch {
       this.#setThinking(false);
       this.#clearMovePreview();

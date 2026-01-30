@@ -26,7 +26,7 @@ export default class BoardComponent {
         square.dataset.col = col;
 
         const onClick = () => {
-          EventBus.emit("attack attempted", {
+          EventBus.emit("point selected", {
             x: col,
             y: row,
           });
