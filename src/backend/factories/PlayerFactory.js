@@ -1,29 +1,23 @@
 import Player from "../entities/Player";
 
 export default class PlayerFactory {
-  constructor() {}
-
-  createPlayersFromDetails(playerDetails) {
-    const player1 = new Player(
-      playerDetails.player1.name,
-      playerDetails.player1.isAI,
-      playerDetails.player1.board,
-    );
-    const player2 = new Player(
-      playerDetails.player2.name,
-      playerDetails.player2.isAI,
-      playerDetails.player1.board,
-    );
-
-    return { player1, player2 };
+  createPlayer({ name, isAI, board }) {
+    return new Player(name, isAI, board);
   }
 
-  recreatePlayersFromExisting(existingPlayers) {
-    const { player1: oldPlayer1, player2: oldPlayer2 } = existingPlayers;
+  createPlayers({ player1, player2 }) {
+    return {
+      player1: this.createPlayer(player1),
+      player2: this.createPlayer(player2),
+    };
+  }
 
-    const player1 = new Player(oldPlayer1.getName(), oldPlayer1.isAI());
-    const player2 = new Player(oldPlayer2.getName(), oldPlayer2.isAI());
+  recreatePlayersFromExisting(existingPlayers, { player1Board, player2Board } = {}) {
+    const { player1: existingPlayer1, player2: existingPlayer2 } = existingPlayers;
 
-    return { player1, player2 };
+    return {
+      player1: new Player(existingPlayer1.getName(), existingPlayer1.isAI(), player1Board),
+      player2: new Player(existingPlayer2.getName(), existingPlayer2.isAI(), player2Board),
+    };
   }
 }
