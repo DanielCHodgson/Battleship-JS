@@ -22,6 +22,9 @@ export default class GameEngine {
 
   #phase = "setup";
 
+  #pendingSetupDetails = null;
+  #pendingDeployments = null;
+
   #deploymentSession1;
   #deploymentSession2;
 
@@ -78,57 +81,62 @@ export default class GameEngine {
     this.#players = {};
   }
 
-  #startDeployment(playerDetails) {
-    this.setPhase("deploying");
-
-    this.#deploymentSession1.reset();
-    this.#deploymentSession2.reset();
-
-    this.#deploymentSession1.randomize();
-    const result1 = this.#deploymentSession1.buildResult();
-
-    this.#deploymentSession2.randomize();
-    const result2 = this.#deploymentSession2.buildResult();
-
-    if (!result1.ok || !result2.ok) {
-      return;
-    }
-
-    const board1 = Gameboard.fromDeployment(result1.deployment);
-    const board2 = Gameboard.fromDeployment(result2.deployment);
-
-    this.#startGame({
-      player1: {
-        name: playerDetails.player1.name,
-        isAI: playerDetails.player1.isAI,
-        board: board1,
-      },
-      player2: {
-        name: playerDetails.player2.name,
-        isAI: playerDetails.player2.isAI,
-        board: board2,
-      },
-    });
-  }
-
-  getPhase() {
-    return this.#phase;
-  }
-
-  setPhase(phase) {
-    this.#phase = phase;
-  }
-
-  getPlayers() {
-    return this.#players;
-  }
-
   setPlayers(player1, player2) {
     this.#players = { player1, player2 };
   }
 
   submitSetup(playerDetails) {
     this.#startDeployment(playerDetails);
+  }
+
+  completeDeployment(deployment) {
+    const deployments = deployment.deployments ?? this.#pendingDeployments;
+    const setup = deployment.playerDetails ?? this.#pendingSetupDetails;
+
+    if (!deployments || !setup) return;
+
+    const board1 = Gameboard.fromDeployment(deployments.player1);
+    const board2 = Gameboard.fromDeployment(deployments.player2);
+
+    this.#pendingDeployments = null;
+    this.#pendingSetupDetails = null;
+
+    this.#startGame({
+      player1: {
+        name: setup.player1.name,
+        isAI: setup.player1.isAI,
+        board: board1,
+      },
+      player2: {
+        name: setup.player2.name,
+        isAI: setup.player2.isAI,
+        board: board2,
+      },
+    });
+  }
+
+  #startDeployment(playerDetails) {
+    this.setPhase("deploying");
+    this.#pendingSetupDetails = playerDetails;
+
+    this.#deploymentSession1.reset();
+    this.#deploymentSession2.reset();
+
+    //this.#deploymentSession1.randomize();
+    //const result1 = this.#deploymentSession1.buildResult();
+
+    //this.#deploymentSession2.randomize();
+    //const result2 = this.#deploymentSession2.buildResult();
+
+    //if (!result1.ok || !result2.ok) return;
+
+    ////this.#pendingDeployments = {
+    // player1: result1.deployment,
+    // player2: result2.deployment,
+    //};
+
+    console.log(this.#phase);
+    this.emitState();
   }
 
   #startGame(playerDetailsWithBoards) {
@@ -198,5 +206,21 @@ export default class GameEngine {
 
   gameIsWon(board) {
     return board.getShips().every((ship) => ship.isSunk());
+  }
+
+  getPhase() {
+    return this.#phase;
+  }
+
+  setPhase(phase) {
+    this.#phase = phase;
+  }
+
+  getPlayers() {
+    return this.#players;
+  }
+
+  getPendingDeployments() {
+    return this.#pendingDeployments;
   }
 }

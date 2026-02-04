@@ -12,6 +12,9 @@ export default class SetupPage {
   constructor(container) {
     this.#container = container;
     this.#element = DomUtility.stringToHTML(htmlString);
+  }
+
+  open() {
     this.#cacheFields();
     this.#bindEvents();
     this.render();

@@ -7,6 +7,7 @@ export default class GameController {
   #sceneManager;
 
   #onSetupSubmitted;
+  #onDeploymentCompleted;
   #onAttackAttempted;
   #onUndo;
   #onRedo;
@@ -21,30 +22,31 @@ export default class GameController {
 
     this.#onSetupSubmitted = (playerDetails) =>
       this.#gameEngine.submitSetup(playerDetails);
+
+    this.#onDeploymentCompleted = (deployment) =>
+      this.#gameEngine.completeDeployment(deployment);
+
     this.#onAttackAttempted = (point) => this.#gameEngine.attemptAttack(point);
     this.#onUndo = () => this.#gameEngine.undo();
     this.#onRedo = () => this.#gameEngine.redo();
     this.#onRestart = () => this.#gameEngine.restart();
 
     this.#registerEvents();
+    this.#sceneManager.launch();
   }
 
   #registerEvents() {
     EventBus.on("setup submitted", this.#onSetupSubmitted);
-    // EventBus.on("deployment completed", this.#onDeploymentCompleted);
+    EventBus.on("deployment completed", this.#onDeploymentCompleted);
     EventBus.on("point selected", this.#onAttackAttempted);
     EventBus.on("undo", this.#onUndo);
     EventBus.on("redo", this.#onRedo);
     EventBus.on("restart", this.#onRestart);
   }
 
-  launchGame() {
-    this.#sceneManager.launch();
-    this.#gameEngine.emitState();
-  }
-
   destroy() {
     EventBus.off("setup submitted", this.#onSetupSubmitted);
+    EventBus.off("deployment completed", this.#onDeploymentCompleted);
     EventBus.off("point selected", this.#onAttackAttempted);
     EventBus.off("undo", this.#onUndo);
     EventBus.off("redo", this.#onRedo);
@@ -52,8 +54,5 @@ export default class GameController {
 
     this.#sceneManager.destroy();
     this.#gameEngine.destroy();
-
-    this.#sceneManager = null;
-    this.#gameEngine = null;
   }
 }
