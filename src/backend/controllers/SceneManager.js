@@ -68,4 +68,16 @@ export default class SceneManager {
     this.#gamePage = null;
     this.#deploymentPage = null;
   }
+
+  getSetupPage() {
+    return this.#setupPage;
+  }
+
+  getDeploymentPage() {
+    return this.#deploymentPage;
+  }
+  
+  getGamePage() {
+    return this.#gamePage;
+  }
 }

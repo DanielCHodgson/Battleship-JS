@@ -21,11 +21,9 @@ export default class GameController {
     );
 
     this.#onSetupSubmitted = (playerDetails) =>
-      this.#gameEngine.submitSetup(playerDetails);
-
+      this.#gameEngine.startDeployment(playerDetails);
     this.#onDeploymentCompleted = (deployment) =>
-      this.#gameEngine.completeDeployment(deployment);
-
+      this.#gameEngine.startGame(deployment);
     this.#onAttackAttempted = (point) => this.#gameEngine.attemptAttack(point);
     this.#onUndo = () => this.#gameEngine.undo();
     this.#onRedo = () => this.#gameEngine.redo();

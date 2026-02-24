@@ -1,115 +1,64 @@
 import DomUtility from "../../utilities/DomUtility";
 import htmlString from "./deployment-page.html";
 import "./deployment-page.css";
+
 import EventBus from "../../../backend/utilities/EventBus";
 import BoardComponent from "../../components/board/board-component";
 
 export default class DeploymentPage {
   #container;
-  #engine;
   #element;
-  #handlers = {};
+
+  #boardContainer = null;
   #boardComponent = null;
-  #deploymentSession = null;
+  #onStateChanged = null;
 
-  #fields = {
-    boardElement: null,
-    continueBtn: null,
-    randomizeBtn: null,
-  };
-
-  constructor(container, engine) {
+  constructor(container) {
     this.#container = container;
-    this.#engine = engine;
     this.#element = DomUtility.stringToHTML(htmlString);
-
-    this.#cacheFields();
-    this.#initBoard();
-    this.#bindEvents();
   }
 
   open() {
-    this.render();
-    this.#renderFromEngine();
+    this.renderElement();
+    this.#cacheFields();
+    this.#boardComponent = new BoardComponent(this.#boardContainer);
+    this.#registerEvents();
   }
 
   #cacheFields() {
-    this.#fields.boardElement = this.#element.querySelector(".board");
-
-    this.#fields.continueBtn = this.#element.querySelector(".continue");
-    this.#fields.randomizeBtn = this.#element.querySelector(".randomize");
+    this.#boardContainer = this.#element.querySelector(".board");
   }
 
-  #initBoard() {
-    if (this.#fields.boardElement) {
-      this.#boardComponent = new BoardComponent(this.#fields.boardElement);
-    }
+  #registerEvents() {
+    this.#onStateChanged = (state) => this.#boardComponent.renderState(state);
+    EventBus.on("state changed", this.#onStateChanged);
   }
 
-  #bindEvents() {
-    this.#handlers.onContinue = () => {
-      const deployments = this.#engine.getPendingDeployments();
-
-      EventBus.emit("deployment completed", {
-        deployments,
-      });
-    };
-
-    this.#handlers.onRandomize = () => {
-      this.#handlers.onContinue();
-    };
-
-    this.#fields.continueBtn?.addEventListener(
-      "click",
-      this.#handlers.onContinue,
-    );
-
-    this.#fields.randomizeBtn?.addEventListener(
-      "click",
-      this.#handlers.onRandomize,
-    );
-
-    if (!this.#fields.continueBtn) {
-      queueMicrotask(() => this.#handlers.onContinue());
-    }
-  }
-
-  #renderFromEngine() {
-    const pending = this.#engine.getPendingDeployments();
-    console.log(pending);
-
-    if (!pending) return;
-  }
-
-  render() {
+  renderElement() {
+    this.#container.innerHTML = "";
+    this.#container
     this.#container.appendChild(this.#element);
   }
 
+  renderState(state) {
+    console.log(this.#boardComponent);
+    this.#boardComponent?.renderState(state);
+  }
+
   destroy() {
-    this.#fields.continueBtn?.removeEventListener(
-      "click",
-      this.#handlers.onContinue,
-    );
-    this.#fields.randomizeBtn?.removeEventListener(
-      "click",
-      this.#handlers.onRandomize,
-    );
+    if (this.#onStateChanged)
+      EventBus.off("state changed", this.#onStateChanged);
 
-    this.#boardComponent?.destroy?.();
+    this.#onStateChanged = null;
 
-    this.#element?.remove();
+    this.#boardComponent?.destroy();
 
-    this.#handlers = {};
+    if (this.#element?.parentNode)
+      this.#element.parentNode.removeChild(this.#element);
+
     this.#boardComponent = null;
+    this.#boardContainer = null;
     this.#element = null;
     this.#container = null;
-    this.#engine = null;
-  }
-
-  getDeploymentSession() {
-    return this.#deploymentSession;
-  }
-  setDeploymentSession(deploymentSession) {
-    this.#deploymentSession = deploymentSession;
   }
 }

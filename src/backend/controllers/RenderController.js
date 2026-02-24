@@ -1,6 +1,9 @@
 import EventBus from "../utilities/EventBus";
 
 export default class RenderController {
+
+
+  /*
   #playerCells;
   #enemyCells;
   #playerBoard;
@@ -143,4 +146,6 @@ export default class RenderController {
     this.#playerBoard = null;
     this.#targetBoard = null;
   }
+
+  */
 }
