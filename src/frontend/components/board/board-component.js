@@ -67,6 +67,15 @@ export default class BoardComponent {
   renderState(state) {
     this.clearBoard();
 
+    if (state.getPhase() === "deploying") {
+      const deployment = state.getDeployment();
+      const ships = deployment?.board?.ships ?? [];
+
+      ships.forEach((ship) =>
+        (ship.positions ?? []).forEach(({ x, y }) => this.paintCell(x, y, "ship")),
+      );
+      return;
+    }
     const turn = state.getTurn();
     if (!turn) return;
 
@@ -78,12 +87,8 @@ export default class BoardComponent {
       }),
     );
 
-    if (state.getPhase() === "playing") {
-      boardState.getHits().forEach(({ x, y }) => this.paintCell(x, y, "hit"));
-      boardState
-        .getMisses()
-        .forEach(({ x, y }) => this.paintCell(x, y, "miss"));
-    }
+    boardState.getHits().forEach(({ x, y }) => this.paintCell(x, y, "hit"));
+    boardState.getMisses().forEach(({ x, y }) => this.paintCell(x, y, "miss"));
   }
 
   setPreview(point, on) {

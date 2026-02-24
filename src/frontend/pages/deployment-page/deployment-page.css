@@ -13,7 +13,7 @@
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   justify-items: center;
   gap: 2rem;
 }
@@ -21,6 +21,15 @@
 .deployment-page .board {
   justify-self: start;
   width: clamp(300px, 60%, 80%);
+}
+
+.deployment-page .buttons {
+  padding: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  justify-self: flex-start;
+  align-self: flex-start;
+  gap: 1rem;
 }
 
 .ship-select {
@@ -102,6 +111,11 @@
 
 .ship-select li:hover::after {
   background: rgba(255, 255, 255, 0.9);
+}
+
+.ship-select li.selected {
+  font-weight: bold;
+  text-decoration: underline;
 }
 
 .ship-select li.selected::after {

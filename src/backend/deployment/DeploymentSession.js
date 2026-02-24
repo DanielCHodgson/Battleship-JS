@@ -15,7 +15,6 @@ export default class DeploymentSession {
     this.#shipsToPlace = this.#shipFactory.createFleet();
   }
 
-  
   setSelectedShip(name) {
     const ship = this.#shipsToPlace.find((ship) => ship.getName() === name);
     if (!ship) return { ok: false, reason: "ship-not-available" };
@@ -106,6 +105,10 @@ export default class DeploymentSession {
 
   getSelectedShip() {
     return this.#selectedShip;
+  }
+
+  getSelectedDirection() {
+    return this.#selectedDirection;
   }
 
   getBoard() {

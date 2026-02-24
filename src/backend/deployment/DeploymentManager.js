@@ -9,6 +9,7 @@ export default class DeploymentManager {
       player2: new DeploymentSession(),
     };
   }
+
   reset() {
     this.#sessions.player1.reset();
     this.#sessions.player2.reset();
@@ -18,13 +19,43 @@ export default class DeploymentManager {
     return this.#sessions[playerKey];
   }
 
+  selectShip(playerKey, name) {
+    const session = this.#sessions[playerKey];
+    if (!session) return { ok: false, reason: "no-session" };
+    return session.setSelectedShip(name);
+  }
+
+  setDirection(playerKey, direction) {
+    const session = this.#sessions[playerKey];
+    if (!session) return { ok: false, reason: "no-session" };
+    return session.setDirection(direction);
+  }
+
+  place(playerKey, point) {
+    const session = this.#sessions[playerKey];
+    if (!session) return { ok: false, reason: "no-session" };
+    return session.placeAtPoint(point);
+  }
+
+  undo(playerKey) {
+    const session = this.#sessions[playerKey];
+    if (!session) return { ok: false, reason: "no-session" };
+    return session.undoLastPlacement();
+  }
+
   randomize(playerKey) {
-    this.#sessions[playerKey].reset();
-    this.#sessions[playerKey].randomize();
+    const session = this.#sessions[playerKey];
+    if (!session) return { ok: false, reason: "no-session" };
+
+    session.reset();
+    session.randomize();
+    return { ok: true };
   }
 
   isComplete() {
-    return this.#sessions.player1.isComplete() && this.#sessions.player2.isComplete();
+    return (
+      this.#sessions.player1.isComplete() && this.#sessions.player2.isComplete()
+    );
   }
 
   buildDeployments() {
@@ -36,6 +67,29 @@ export default class DeploymentManager {
     return {
       ok: true,
       deployments: { player1: result1.deployment, player2: result2.deployment },
+    };
+  }
+
+  getState(playerKey) {
+    const session = this.#sessions[playerKey];
+    if (!session) return null;
+
+    const board = session.getBoard();
+    const selectedShip = session.getSelectedShip();
+
+    return {
+      deployingFor: playerKey,
+      direction: session.getSelectedDirection(),
+      selectedShip: selectedShip ? selectedShip.getName() : null,
+      shipsToPlace: session.getShipsToPlace().map((ship) => ship.getName()),
+      placedShips: session.getPlacedShips().map((ship) => ship.getName()),
+      board: {
+        size: board.getSize(),
+        ships: board.getShips().map((ship) => ({
+          name: ship.getName(),
+          positions: ship.getPositions().map((point) => ({ ...point })),
+        })),
+      },
     };
   }
 }

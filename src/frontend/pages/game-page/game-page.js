@@ -4,9 +4,7 @@ import "./game-page.css";
 
 import Hud from "../../components/ui/hud/hud";
 import BoardComponent from "../../components/board/board-component";
-//import RenderController from "../../../backend/controllers/RenderController";
 import EventBus from "../../../backend/utilities/EventBus";
-import Button from "../../components/ui/button/button-component";
 
 export default class GamePage {
   #container;
@@ -17,7 +15,6 @@ export default class GamePage {
   #board2 = null;
   #buttons = null;
 
-  #renderController = null;
   #hudComponent = null;
   #boardComponent1 = null;
   #boardComponent2 = null;
@@ -36,7 +33,6 @@ export default class GamePage {
     this.#hudComponent = new Hud(this.#display);
     this.#boardComponent1 = new BoardComponent(this.#board1);
     this.#boardComponent2 = new BoardComponent(this.#board2);
-    //this.#renderController = new RenderController();
 
     this.#bindEvents();
   }
@@ -70,14 +66,12 @@ export default class GamePage {
     this.#hudComponent.destroy();
     this.#boardComponent1.destroy();
     this.#boardComponent2.destroy();
-    //this.#renderController.destroy();
 
     if (this.#element?.parentNode) {
       this.#element.parentNode.removeChild(this.#element);
     }
 
     this.#handlers = {};
-    //this.#renderController = null;
     this.#hudComponent = null;
     this.#boardComponent1 = null;
     this.#boardComponent2 = null;

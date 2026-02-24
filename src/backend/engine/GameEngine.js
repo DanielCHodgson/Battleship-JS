@@ -1,6 +1,5 @@
 import EventBus from "../utilities/EventBus";
 import TurnManager from "../turns/TurnManager";
-import GameState from "../engine/GameState";
 import AttackCommand from "../commands/AttackCommand";
 import CompositeCommand from "../commands/CompositeCommand";
 import ResolveTurnCommand from "../commands/ResolveTurnCommand";
@@ -9,6 +8,7 @@ import AiMoveCalculator from "../controllers/AiMoveCalculator";
 import AiTurnController from "../controllers/AiTurnController";
 import PlayerFactory from "../factories/PlayerFactory";
 import DeploymentManager from "../deployment/DeploymentManager";
+import GameStateAdapter from "./GameStateAdapter";
 
 export default class GameEngine {
   #players = {};
@@ -19,6 +19,7 @@ export default class GameEngine {
 
   #setupDetails = null;
   #deploymentManager;
+  #deployingFor = "player1";
   #phase = "setup";
 
   constructor() {
@@ -34,11 +35,81 @@ export default class GameEngine {
     this.setPhase("setup");
   }
 
+  deploySelectShip(payload) {
+    if (this.#phase !== "deploying") return;
+
+    const name = typeof payload === "string" ? payload : payload?.name;
+    if (!name) return;
+
+    this.#deploymentManager.selectShip(this.#deployingFor, name);
+    this.emitState();
+  }
+
+  deploySetDirection(payload) {
+    if (this.#phase !== "deploying") return;
+
+    const direction =
+      typeof payload === "string" ? payload : payload?.direction;
+    if (!direction) return;
+
+    this.#deploymentManager.setDirection(this.#deployingFor, direction);
+    this.emitState();
+  }
+
+  deployRandomize() {
+    if (this.#phase !== "deploying") return;
+
+    this.#deploymentManager.randomize("player1");
+    this.emitState();
+  }
+
+  attemptDeployment(point) {
+    if (this.#phase !== "deploying") return;
+    if (!point) return;
+
+    const result = this.#deploymentManager.place(this.#deployingFor, point);
+
+    if (!result.ok) {
+      console.log(result);
+      this.emitState();
+      return;
+    }
+
+    this.emitState();
+  }
+
+  deploySubmit() {
+    if (this.#phase !== "deploying") return;
+
+    const ok = this.#checkDeploymentComplete();
+    if (!ok) {
+      console.log("deployment not complete");
+    }
+
+    this.emitState();
+  }
+
+  #checkDeploymentComplete() {
+    if (!this.#deploymentManager.isComplete()) return false;
+
+    const build = this.#deploymentManager.buildDeployments();
+    if (!build.ok) return false;
+
+    EventBus.emit("deployment completed", build.deployments);
+    return true;
+  }
+
   attemptAttack(point) {
     this.#handleAttack(point);
   }
 
   undo() {
+    if (this.#phase === "deploying") {
+      this.#deploymentManager.undo(this.#deployingFor);
+      this.emitState();
+      return;
+    }
+
     this.#commandHistory.undoLastCommand();
     this.emitState();
   }
@@ -49,9 +120,13 @@ export default class GameEngine {
   }
 
   restart() {
+    if (this.#phase === "deploying") {
+      this.startDeployment(this.#setupDetails);
+      return;
+    }
+
     this.#restartGame();
   }
-
 
   destroy() {
     this.#aiTurnController.destroy();
@@ -64,6 +139,12 @@ export default class GameEngine {
   }
 
   startDeployment(playerDetails) {
+    this.#setupDetails = playerDetails;
+
+    this.#deploymentManager.reset();
+    this.#deploymentManager.randomize("player2");
+    this.#deployingFor = "player1";
+
     this.setPhase("deploying");
     this.emitState();
   }
@@ -115,16 +196,15 @@ export default class GameEngine {
   }
 
   emitState() {
-    EventBus.emit(
-      "state changed",
-      new GameState({
-        turn: this.#turnManager.getCurrentTurn(),
-        turnNumber: this.#turnManager.getTurnNumber(),
-        phase: this.#phase,
-        canUndo: this.#commandHistory.canUndo(),
-        canRedo: this.#commandHistory.canRedo(),
-      }),
-    );
+    const state = GameStateAdapter.toState({
+      phase: this.#phase,
+      turnManager: this.#turnManager,
+      commandHistory: this.#commandHistory,
+      deploymentManager: this.#deploymentManager,
+      deployingFor: this.#deployingFor,
+    });
+
+    EventBus.emit("state changed", state);
   }
 
   gameIsWon(board) {
