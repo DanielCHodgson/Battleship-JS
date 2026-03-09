@@ -63,6 +63,12 @@ export default class GameEngine {
     this.emitState();
   }
 
+  deployUndo() {
+    if (this.#phase !== "deploying") return;
+    this.#deploymentManager.undo(this.#deployingFor);
+    this.emitState();
+  }
+
   attemptDeployment(point) {
     if (this.#phase !== "deploying") return;
     if (!point) return;
@@ -70,7 +76,6 @@ export default class GameEngine {
     const result = this.#deploymentManager.place(this.#deployingFor, point);
 
     if (!result.ok) {
-      console.log(result);
       this.emitState();
       return;
     }

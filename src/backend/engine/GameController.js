@@ -7,16 +7,20 @@ export default class GameController {
   #sceneManager;
 
   #onSetupSubmitted;
+
+  #onDeploymentShipSelected;
+  #onDeploymentDirectionSelected;
+  #onDeploymentRandomize;
+  #onDeploymentUndo;
+
   #onDeploySubmit;
   #onDeploymentCompleted;
-  #onPointSelected;
-  #onUndo;
-  #onRedo;
-  #onRestart;
 
-  #onDeployShipSelected;
-  #onDeployDirectionSelected;
-  #onDeployRandomize;
+  #onPointSelected;
+
+  #onMoveUndo;
+  #onMoveRedo;
+  #onGameRestart;
 
   constructor() {
     this.#gameEngine = new GameEngine();
@@ -25,13 +29,14 @@ export default class GameController {
       this.#gameEngine,
     );
 
+    this.#bindEvents();
+    this.#registerEvents();
+    this.#sceneManager.launch();
+  }
+
+  #bindEvents() {
     this.#onSetupSubmitted = (playerDetails) =>
       this.#gameEngine.startDeployment(playerDetails);
-
-    this.#onDeploySubmit = () => this.#gameEngine.deploySubmit();
-
-    this.#onDeploymentCompleted = (deployment) =>
-      this.#gameEngine.startGame(deployment);
 
     this.#onPointSelected = (point) => {
       const phase = this.#gameEngine.getPhase();
@@ -43,33 +48,23 @@ export default class GameController {
       }
     };
 
-    this.#onUndo = () => this.#gameEngine.undo();
-    this.#onRedo = () => this.#gameEngine.redo();
-    this.#onRestart = () => this.#gameEngine.restart();
+    this.#onDeploySubmit = () => this.#gameEngine.deploySubmit();
 
-    // allow both:
-    // EventBus.emit("deploy ship selected", "carrier")
-    // EventBus.emit("deploy ship selected", { name: "carrier" })
-    this.#onDeployShipSelected = (payload) => {
-      const name = typeof payload === "string" ? payload : payload?.name;
-      if (!name) return;
+    this.#onDeploymentCompleted = (deployment) =>
+      this.#gameEngine.startGame(deployment);
+
+    this.#onDeploymentShipSelected = (name) =>
       this.#gameEngine.deploySelectShip(name);
-    };
 
-    // allow both:
-    // EventBus.emit("deploy direction selected", "vertical")
-    // EventBus.emit("deploy direction selected", { direction: "vertical" })
-    this.#onDeployDirectionSelected = (payload) => {
-      const direction =
-        typeof payload === "string" ? payload : payload?.direction;
-      if (!direction) return;
+    this.#onDeploymentDirectionSelected = (direction) =>
       this.#gameEngine.deploySetDirection(direction);
-    };
 
-    this.#onDeployRandomize = () => this.#gameEngine.deployRandomize();
+    this.#onDeploymentRandomize = () => this.#gameEngine.deployRandomize();
+    this.#onDeploymentUndo = () => this.#gameEngine.deployUndo();
 
-    this.#registerEvents();
-    this.#sceneManager.launch();
+    this.#onMoveUndo = () => this.#gameEngine.undo();
+    this.#onMoveRedo = () => this.#gameEngine.redo();
+    this.#onGameRestart = () => this.#gameEngine.restart();
   }
 
   #registerEvents() {
@@ -80,13 +75,17 @@ export default class GameController {
 
     EventBus.on("point selected", this.#onPointSelected);
 
-    EventBus.on("deploy ship selected", this.#onDeployShipSelected);
-    EventBus.on("deploy direction selected", this.#onDeployDirectionSelected);
-    EventBus.on("deploy randomize", this.#onDeployRandomize);
+    EventBus.on("deploy ship selected", this.#onDeploymentShipSelected);
+    EventBus.on(
+      "deploy direction selected",
+      this.#onDeploymentDirectionSelected,
+    );
+    EventBus.on("deploy randomize", this.#onDeploymentRandomize);
+    EventBus.on("deploy undo", this.#onDeploymentUndo);
 
-    EventBus.on("undo", this.#onUndo);
-    EventBus.on("redo", this.#onRedo);
-    EventBus.on("restart", this.#onRestart);
+    EventBus.on("undo", this.#onMoveUndo);
+    EventBus.on("redo", this.#onMoveRedo);
+    EventBus.on("restart", this.#onGameRestart);
   }
 
   destroy() {
@@ -97,13 +96,17 @@ export default class GameController {
 
     EventBus.off("point selected", this.#onPointSelected);
 
-    EventBus.off("deploy ship selected", this.#onDeployShipSelected);
-    EventBus.off("deploy direction selected", this.#onDeployDirectionSelected);
-    EventBus.off("deploy randomize", this.#onDeployRandomize);
+    EventBus.off("deploy ship selected", this.#onDeploymentShipSelected);
+    EventBus.off(
+      "deploy direction selected",
+      this.#onDeploymentDirectionSelected,
+    );
+    EventBus.off("deploy randomize", this.#onDeploymentRandomize);
+    EventBus.off("deploy undo", this.#onDeploymentUndo);
 
-    EventBus.off("undo", this.#onUndo);
-    EventBus.off("redo", this.#onRedo);
-    EventBus.off("restart", this.#onRestart);
+    EventBus.off("undo", this.#onMoveUndo);
+    EventBus.off("redo", this.#onMoveRedo);
+    EventBus.off("restart", this.#onGameRestart);
 
     this.#sceneManager.destroy();
     this.#gameEngine.destroy();

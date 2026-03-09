@@ -1,9 +1,18 @@
-deployment-page {
+.deployment-page {
   height: 100vh;
   width: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.deployment-page .display {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .deployment-page .toolbar {
@@ -107,6 +116,13 @@ deployment-page {
   align-self: flex-end;
 }
 
+.ship-select li.placed {
+  opacity: 0.2;
+  mouse-events: none;
+  cursor: default;
+}
+
+
 .ship-select li::after {
   content: "";
   position: absolute;
@@ -130,22 +146,22 @@ deployment-page {
   pointer-events: none;
 }
 
-.ship-select li:hover,
+.ship-select li:hover:not(.placed),
 .deployment-page .buttons button:hover {
   opacity: 0.9;
 }
-.ship-select li:active,
+.ship-select li:active:not(.placed),
 .deployment-page .buttons button:active {
   opacity: 0.8;
 }
 
-.ship-select li:hover::after {
+.ship-select li:hover::after:not(.placed) {
   background: rgba(255, 255, 255, 0.9);
 }
 
 .ship-select li.selected {
   font-weight: bold;
-  text-decoration: underline;
+  background: #5aa8f1
 }
 
 .ship-select li.selected::after {

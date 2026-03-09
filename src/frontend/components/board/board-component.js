@@ -42,8 +42,18 @@ export default class BoardComponent {
       });
     };
 
+    const onHover = () => {
+      EventBus.emit("point hovered", {
+        x: col,
+        y: row,
+      });
+    };
+
     square.addEventListener("click", onClick);
+
     this.#cellHandlers.set(square, onClick);
+
+    square.addEventListener("mouseenter", onHover);
 
     return square;
   }
@@ -72,7 +82,9 @@ export default class BoardComponent {
       const ships = deployment?.board?.ships ?? [];
 
       ships.forEach((ship) =>
-        (ship.positions ?? []).forEach(({ x, y }) => this.paintCell(x, y, "ship")),
+        (ship.positions ?? []).forEach(({ x, y }) =>
+          this.paintCell(x, y, "ship"),
+        ),
       );
       return;
     }

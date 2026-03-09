@@ -9,6 +9,8 @@ export default class DeploymentPage {
   #container;
   #element;
 
+  #textDisplay;
+
   #boardContainer = null;
   #boardComponent = null;
 
@@ -43,6 +45,8 @@ export default class DeploymentPage {
 
   #cacheFields() {
     this.#boardContainer = this.#element.querySelector(".board");
+
+    this.#textDisplay = this.#element.querySelector(".display .text-panel");
 
     this.#shipItems = [...this.#element.querySelectorAll(".ship-select li")];
 
@@ -82,17 +86,22 @@ export default class DeploymentPage {
     };
     this.#submitButton.addEventListener("click", this.#onSubmitClicked);
 
-    this.#onStateChanged = (state) => {
-      this.#handleStateChanged(state);
+    this.#onUndoClicked = () => {
+      EventBus.emit("deploy undo");
     };
 
-    EventBus.on("state changed", this.#onStateChanged);
+    this.#undoButton.addEventListener("click", this.#onUndoClicked);
+
+    this.#onStateChanged = (state) => {
+      this.#updateFromState(state);
+    };
 
     this.#onShowPreview = (point) =>
       this.#boardComponent?.setPreview(point, true);
     this.#onClearPreview = (point) =>
       this.#boardComponent?.setPreview(point, false);
 
+    EventBus.on("state changed", this.#onStateChanged);
     EventBus.on("show ai preview", this.#onShowPreview);
     EventBus.on("clear ai preview", this.#onClearPreview);
   }
@@ -102,37 +111,57 @@ export default class DeploymentPage {
     this.#container.appendChild(this.#element);
   }
 
-  #handleStateChanged(state) {
+  #updateFromState(state) {
     this.#boardComponent.renderState(state);
 
-    const deployment = state.getDeployment?.() ?? null;
-    const remaining = deployment?.shipsToPlace?.length ?? 0;
+    const deployment = state.getDeployment() ?? null;
+    const remaining = deployment.shipsToPlace.length ?? 0;
 
-    if (this.#submitButton) {
-      this.#submitButton.disabled = remaining !== 0;
-    }
+    this.#updateButtons(deployment, remaining, state.canUndo());
+    this.#updateShips(deployment);
 
-    const canUndo = state.canUndo() ?? false;
-    if (this.#undoButton) {
-      this.#undoButton.disabled = !canUndo;
-    }
+    this.#textDisplay.textContent = `Deploy your fleet! ${remaining} ship${remaining !== 1 ? "s" : ""} remaining.`;
+  }
+
+  #updateButtons(deployment, remaining, canUndo) {
+    this.#submitButton.disabled = remaining !== 0;
+    this.#undoButton.disabled = !canUndo;
+
+    this.#directionButtons.forEach((btn) => {
+      const direction = btn.dataset.direction;
+      const isSelected = deployment.direction === direction;
+      btn.classList.toggle("selected", isSelected);
+    });
+  }
+
+  #updateShips(deployment) {
+    this.#shipItems.forEach((li) => {
+      const name = li.textContent.trim();
+      if (!name) return;
+
+      const isSelected = deployment.selectedShip === name;
+      li.classList.toggle("selected", isSelected);
+
+      const isPlaced = !deployment.shipsToPlace.includes(name);
+      li.classList.toggle("placed", isPlaced);
+    });
   }
 
   #handleShipClicked(li) {
     const name = li.textContent.trim();
     if (!name) return;
 
-    EventBus.emit("deploy ship selected", { name });
-
     this.#shipItems.forEach((element) => element.classList.remove("selected"));
     li.classList.add("selected");
+
+    EventBus.emit("deploy ship selected", name);
   }
 
   #handleDirectionClicked(button) {
     const direction = button.dataset.direction;
     if (!direction) return;
 
-    EventBus.emit("deploy direction selected", { direction });
+    EventBus.emit("deploy direction selected", direction);
 
     this.#directionButtons.forEach((element) =>
       element.classList.remove("selected"),
