@@ -19,8 +19,12 @@ export default class GameEngine {
 
   #setupDetails = null;
   #deploymentManager;
-  #deployingFor = "player1";
+
   #phase = "setup";
+  #deployingFor = null;
+
+  #deploymentOrder = [];
+  #deploymentIndex = 0;
 
   constructor() {
     this.#playerFactory = new PlayerFactory();
@@ -35,91 +39,21 @@ export default class GameEngine {
     this.setPhase("setup");
   }
 
-  deploySelectShip(payload) {
-    if (this.#phase !== "deploying") return;
-
-    const name = typeof payload === "string" ? payload : payload?.name;
-    if (!name) return;
-
-    this.#deploymentManager.selectShip(this.#deployingFor, name);
-    this.emitState();
-  }
-
-  deploySetDirection(payload) {
-    if (this.#phase !== "deploying") return;
-
-    const direction =
-      typeof payload === "string" ? payload : payload?.direction;
-    if (!direction) return;
-
-    this.#deploymentManager.setDirection(this.#deployingFor, direction);
-    this.emitState();
-  }
-
-  deployRandomize() {
-    if (this.#phase !== "deploying") return;
-
-    this.#deploymentManager.randomize("player1");
-    this.emitState();
-  }
-
-  deployUndo() {
-    if (this.#phase !== "deploying") return;
-    this.#deploymentManager.undo(this.#deployingFor);
-    this.emitState();
-  }
-
-  attemptDeployment(point) {
-    if (this.#phase !== "deploying") return;
-    if (!point) return;
-
-    const result = this.#deploymentManager.place(this.#deployingFor, point);
-
-    if (!result.ok) {
-      this.emitState();
-      return;
-    }
-
-    this.emitState();
-  }
-
-  deploySubmit() {
-    if (this.#phase !== "deploying") return;
-
-    const ok = this.#checkDeploymentComplete();
-    if (!ok) {
-      console.log("deployment not complete");
-    }
-
-    this.emitState();
-  }
-
-  #checkDeploymentComplete() {
-    if (!this.#deploymentManager.isComplete()) return false;
-
-    const build = this.#deploymentManager.buildDeployments();
-    if (!build.ok) return false;
-
-    EventBus.emit("deployment completed", build.deployments);
-    return true;
-  }
-
-  attemptAttack(point) {
-    this.#handleAttack(point);
-  }
-
   undo() {
-    if (this.#phase === "deploying") {
+    if (this.#phase === "deploying" && this.#deployingFor) {
       this.#deploymentManager.undo(this.#deployingFor);
       this.emitState();
       return;
     }
 
-    this.#commandHistory.undoLastCommand();
-    this.emitState();
+    if (this.#phase === "playing") {
+      this.#commandHistory.undoLastCommand();
+      this.emitState();
+    }
   }
 
   redo() {
+    if (this.#phase !== "playing") return;
     this.#commandHistory.redoCommand();
     this.emitState();
   }
@@ -145,25 +79,90 @@ export default class GameEngine {
 
   startDeployment(playerDetails) {
     this.#setupDetails = playerDetails;
-
     this.#deploymentManager.reset();
-    this.#deploymentManager.randomize("player2");
-    this.#deployingFor = "player1";
 
+    this.#prepareDeploymentFlow(playerDetails);
+
+    if (this.#deploymentOrder.length === 0) {
+      this.#finishDeployment();
+      return;
+    }
+
+    this.#deploymentIndex = 0;
+    this.#deployingFor = this.#deploymentOrder[this.#deploymentIndex];
     this.setPhase("deploying");
     this.emitState();
   }
 
-  startGame(playerDetailsWithBoards) {
-    this.#commandHistory.reset();
-    this.setPhase("playing");
+  deploySubmit() {
+    if (this.#phase !== "deploying") return;
+    if (!this.#deployingFor) return;
 
-    if (!this.#players.player1 || !this.#players.player2) {
-      this.#players = this.#playerFactory.createPlayers(
-        playerDetailsWithBoards,
-      );
+    const result = this.#deploymentManager.validatePlayer(this.#deployingFor);
+    if (!result.ok) {
+      console.log("deployment not complete", result.reason);
+      this.emitState();
+      return;
     }
 
+    if (this.#hasNextDeploymentPlayer()) {
+      this.#advanceDeploymentPlayer();
+      this.emitState();
+      return;
+    }
+
+    this.#finishDeployment();
+  }
+
+  #prepareDeploymentFlow(playerDetails) {
+    this.#deploymentOrder = [];
+    this.#deploymentIndex = 0;
+    this.#deployingFor = null;
+
+    Object.entries(playerDetails).forEach(([key, player]) => {
+      if (player.isAI) {
+        this.#deploymentManager.randomize(key);
+      } else {
+        this.#deploymentOrder.push(key);
+      }
+    });
+  }
+
+  #hasNextDeploymentPlayer() {
+    return this.#deploymentIndex < this.#deploymentOrder.length - 1;
+  }
+
+  #advanceDeploymentPlayer() {
+    this.#deploymentIndex += 1;
+    this.#deployingFor = this.#deploymentOrder[this.#deploymentIndex];
+  }
+
+  #finishDeployment() {
+    const build = this.#deploymentManager.buildDeployments();
+    if (!build.ok) {
+      console.log("failed to build deployments", build);
+      return;
+    }
+
+    const player1 = this.#playerFactory.createPlayerFromDeployment({
+      name: this.#setupDetails.player1.name,
+      isAI: this.#setupDetails.player1.isAI,
+      deployment: build.deployments.player1,
+    });
+
+    const player2 = this.#playerFactory.createPlayerFromDeployment({
+      name: this.#setupDetails.player2.name,
+      isAI: this.#setupDetails.player2.isAI,
+      deployment: build.deployments.player2,
+    });
+
+    EventBus.emit("deployment completed", { player1, player2 });
+  }
+
+  startGame(players) {
+    this.#commandHistory.reset();
+    this.setPhase("playing");
+    this.#players = players;
     this.#turnManager.initialize(this.#players);
     this.emitState();
   }
@@ -184,7 +183,7 @@ export default class GameEngine {
     this.emitState();
   }
 
-  #handleAttack(point) {
+  handleAttack(point) {
     if (this.#phase !== "playing") return;
     if (!point) return;
 
@@ -226,5 +225,13 @@ export default class GameEngine {
 
   getPlayers() {
     return this.#players;
+  }
+
+  getDeploymentManager() {
+    return this.#deploymentManager;
+  }
+
+  getDeployingFor() {
+    return this.#deployingFor;
   }
 }

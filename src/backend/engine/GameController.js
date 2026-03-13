@@ -42,25 +42,46 @@ export default class GameController {
       const phase = this.#gameEngine.getPhase();
 
       if (phase === "deploying") {
-        this.#gameEngine.attemptDeployment(point);
+        this.#gameEngine
+          .getDeploymentManager()
+          .place(this.#gameEngine.getDeployingFor(), point);
+        this.#gameEngine.emitState();
       } else if (phase === "playing") {
-        this.#gameEngine.attemptAttack(point);
+        this.#gameEngine.handleAttack(point);
+        this.#gameEngine.emitState();
       }
     };
 
     this.#onDeploySubmit = () => this.#gameEngine.deploySubmit();
 
-    this.#onDeploymentCompleted = (deployment) =>
-      this.#gameEngine.startGame(deployment);
+    this.#onDeploymentCompleted = (players) =>
+      this.#gameEngine.startGame(players);
 
-    this.#onDeploymentShipSelected = (name) =>
-      this.#gameEngine.deploySelectShip(name);
+    this.#onDeploymentShipSelected = (shipName) => {
+      this.#gameEngine
+        .getDeploymentManager()
+        .selectShip(this.#gameEngine.getDeployingFor(), shipName);
+      this.#gameEngine.emitState();
+    };
 
-    this.#onDeploymentDirectionSelected = (direction) =>
-      this.#gameEngine.deploySetDirection(direction);
+    this.#onDeploymentDirectionSelected = (direction) => {
+      this.#gameEngine
+        .getDeploymentManager()
+        .setDirection(this.#gameEngine.getDeployingFor(), direction);
+      this.#gameEngine.emitState();
+    };
 
-    this.#onDeploymentRandomize = () => this.#gameEngine.deployRandomize();
-    this.#onDeploymentUndo = () => this.#gameEngine.deployUndo();
+    this.#onDeploymentRandomize = () => {
+      this.#gameEngine.getDeploymentManager().randomize(this.#gameEngine.getDeployingFor());
+      this.#gameEngine.emitState();
+    };
+
+    this.#onDeploymentUndo = () => {
+      this.#gameEngine
+        .getDeploymentManager()
+        .undo(this.#gameEngine.getDeployingFor());
+      this.#gameEngine.emitState();
+    };
 
     this.#onMoveUndo = () => this.#gameEngine.undo();
     this.#onMoveRedo = () => this.#gameEngine.redo();

@@ -7,6 +7,7 @@ export default class BoardComponent {
   #container;
   #element;
   #cellHandlers = new Map();
+  #hoverHandlers = new Map();
   #grid = [];
   #cellMap = null;
 
@@ -50,62 +51,72 @@ export default class BoardComponent {
     };
 
     square.addEventListener("click", onClick);
+    square.addEventListener("mouseenter", onHover);
 
     this.#cellHandlers.set(square, onClick);
-
-    square.addEventListener("mouseenter", onHover);
+    this.#hoverHandlers.set(square, onHover);
 
     return square;
   }
 
   #createCellMap() {
     const cells = new Map();
+
     this.#grid.forEach((cell) => {
       const key = `${cell.dataset.col},${cell.dataset.row}`;
       cells.set(key, cell);
     });
+
     return cells;
   }
 
   renderElement() {
     if (!this.#element) return;
+
     this.#container.innerHTML = "";
     this.#grid.forEach((cell) => this.#element.appendChild(cell));
     this.#container.appendChild(this.#element);
   }
 
-  renderState(state) {
+  renderDeploymentState(ships) {
     this.clearBoard();
+    if (!Array.isArray(ships)) return;
 
-    if (state.getPhase() === "deploying") {
-      const deployment = state.getDeployment();
-      const ships = deployment?.board?.ships ?? [];
+    this.renderShips(ships);
+  }
 
-      ships.forEach((ship) =>
-        (ship.positions ?? []).forEach(({ x, y }) =>
-          this.paintCell(x, y, "ship"),
-        ),
-      );
-      return;
+  renderActivePlayerState(boardState, activePlayerIsAI, enemyPlayerIsAI) {
+    if (!boardState) return;
+
+    if (!activePlayerIsAI || (activePlayerIsAI && enemyPlayerIsAI)) {
+      const ships = Array.isArray(boardState.ships) ? boardState.ships : [];
+      const hits = Array.isArray(boardState.hits) ? boardState.hits : [];
+      const misses = Array.isArray(boardState.misses) ? boardState.misses : [];
+
+      this.renderShips(ships);
+      this.renderHits(hits);
+      this.renderMisses(misses);
+    } else {
+      this.renderFogOfWar();
     }
-    const turn = state.getTurn();
-    if (!turn) return;
+  }
 
-    const boardState = turn.getPlayerBoard();
+  renderTargetPlayerState(targetState) {
+    this.clearBoard();
+    if (!targetState) return;
 
-    boardState.getShips().forEach((ship) =>
-      ship.getPositions().forEach(({ x, y }) => {
-        this.paintCell(x, y, "ship");
-      }),
-    );
-
-    boardState.getHits().forEach(({ x, y }) => this.paintCell(x, y, "hit"));
-    boardState.getMisses().forEach(({ x, y }) => this.paintCell(x, y, "miss"));
+    const hits = Array.isArray(targetState.hits) ? targetState.hits : [];
+    const misses = Array.isArray(targetState.misses) ? targetState.misses : [];
+    this.renderHits(hits);
+    this.renderMisses(misses);
   }
 
   setPreview(point, on) {
+    if (!point) return;
+
     const cell = this.#cellMap.get(`${point.x},${point.y}`);
     if (!cell) return;
+
     cell.classList.toggle("ai-preview", on);
   }
 
@@ -113,20 +124,48 @@ export default class BoardComponent {
     const cell = this.#cellMap.get(`${x},${y}`);
     if (!cell) return;
 
-    cell.classList.add(`${type}`);
+    cell.classList.add(type);
+  }
+
+  renderShips(ships) {
+    ships.forEach((ship) => {
+      const positions = Array.isArray(ship?.positions) ? ship.positions : [];
+
+      positions.forEach(({ x, y }) => {
+        this.paintCell(x, y, "ship");
+      });
+    });
+  }
+
+  renderMisses(misses) {
+    misses.forEach(({ x, y }) => this.paintCell(x, y, "miss"));
+  }
+
+  renderHits(hits) {
+    hits.forEach(({ x, y }) => this.paintCell(x, y, "hit"));
   }
 
   clearBoard() {
-    this.#grid.forEach((cell) =>
-      cell.classList.remove("ship", "hit", "miss", "disabled", "ai-preview"),
-    );
+    this.#grid.forEach((cell) => {
+      cell.classList.remove("ship", "hit", "miss", "disabled", "ai-preview");
+    });
+  }
+
+  renderFogOfWar() {
+    this.#element.classList.add("covered");
   }
 
   destroy() {
     this.#cellHandlers.forEach((handler, cell) => {
       cell.removeEventListener("click", handler);
     });
+
+    this.#hoverHandlers.forEach((handler, cell) => {
+      cell.removeEventListener("mouseenter", handler);
+    });
+
     this.#cellHandlers.clear();
+    this.#hoverHandlers.clear();
 
     if (this.#element?.parentNode) {
       this.#element.parentNode.removeChild(this.#element);

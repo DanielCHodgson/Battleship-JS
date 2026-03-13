@@ -112,15 +112,17 @@ export default class DeploymentPage {
   }
 
   #updateFromState(state) {
-    this.#boardComponent.renderState(state);
-
     const deployment = state.getDeployment() ?? null;
+    if (!deployment) return;
+
     const remaining = deployment.shipsToPlace.length ?? 0;
+
+    this.#boardComponent.renderDeploymentState(deployment.board.ships);
 
     this.#updateButtons(deployment, remaining, state.canUndo());
     this.#updateShips(deployment);
 
-    this.#textDisplay.textContent = `Deploy your fleet! ${remaining} ship${remaining !== 1 ? "s" : ""} remaining.`;
+    this.#textDisplay.textContent = `${deployment.deployingFor} - deploy your fleet! ${remaining} ship${remaining !== 1 ? "s" : ""} remaining.`;
   }
 
   #updateButtons(deployment, remaining, canUndo) {

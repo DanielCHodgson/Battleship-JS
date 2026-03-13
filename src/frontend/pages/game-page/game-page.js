@@ -16,8 +16,8 @@ export default class GamePage {
   #buttons = null;
 
   #hudComponent = null;
-  #boardComponent1 = null;
-  #boardComponent2 = null;
+  #targetBoard = null;
+  #activeBoard = null;
 
   #handlers = {};
 
@@ -31,9 +31,10 @@ export default class GamePage {
     this.#cacheFields();
 
     this.#hudComponent = new Hud(this.#display);
-    this.#boardComponent1 = new BoardComponent(this.#board1);
-    this.#boardComponent2 = new BoardComponent(this.#board2);
+    this.#activeBoard = new BoardComponent(this.#board1);
+    this.#targetBoard = new BoardComponent(this.#board2);
 
+    this.#registerEvents();
     this.#bindEvents();
   }
 
@@ -42,6 +43,26 @@ export default class GamePage {
     this.#board1 = this.#element.querySelector(".board1");
     this.#board2 = this.#element.querySelector(".board2");
     this.#buttons = this.#element.querySelector(".buttons");
+  }
+
+  #registerEvents() {
+    this.#handlers.onStateChanged = (state) => {
+      if (!this.#activeBoard || !this.#targetBoard) return;
+
+      const turn = state.getTurn();
+
+      this.#activeBoard.renderActivePlayerState(
+        this.#serializeBoard(turn.getPlayer().getBoard()),
+        turn.getPlayer().isAI(),
+        turn.getEnemy().isAI(),
+      );
+
+      this.#targetBoard.renderTargetPlayerState(
+        this.#serializeBoard(turn.getEnemy().getBoard()),
+      );
+    };
+
+    EventBus.on("state changed", this.#handlers.onStateChanged);
   }
 
   #bindEvents() {
@@ -59,13 +80,17 @@ export default class GamePage {
   }
 
   destroy() {
+    if (this.#handlers.onStateChanged) {
+      EventBus.off("state changed", this.#handlers.onStateChanged);
+    }
+
     if (this.#buttons && this.#handlers.onButtonsClick) {
       this.#buttons.removeEventListener("click", this.#handlers.onButtonsClick);
     }
 
-    this.#hudComponent.destroy();
-    this.#boardComponent1.destroy();
-    this.#boardComponent2.destroy();
+    this.#hudComponent?.destroy();
+    this.#targetBoard?.destroy();
+    this.#activeBoard?.destroy();
 
     if (this.#element?.parentNode) {
       this.#element.parentNode.removeChild(this.#element);
@@ -73,8 +98,8 @@ export default class GamePage {
 
     this.#handlers = {};
     this.#hudComponent = null;
-    this.#boardComponent1 = null;
-    this.#boardComponent2 = null;
+    this.#targetBoard = null;
+    this.#activeBoard = null;
     this.#display = null;
     this.#board1 = null;
     this.#board2 = null;
@@ -86,5 +111,15 @@ export default class GamePage {
   render() {
     this.#container.innerHTML = "";
     this.#container.appendChild(this.#element);
+  }
+
+  #serializeBoard(board) {
+    return {
+      ships: board.getShips().map((ship) => ({
+        positions: ship.getPositions().map((position) => ({ ...position })),
+      })),
+      hits: board.getHits().map((position) => ({ ...position })),
+      misses: board.getMisses().map((position) => ({ ...position })),
+    };
   }
 }

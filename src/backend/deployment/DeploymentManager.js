@@ -52,6 +52,12 @@ export default class DeploymentManager {
     return { ok: true };
   }
 
+  validatePlayer(playerKey) {
+    const session = this.#sessions[playerKey];
+    if (!session) return { ok: false, reason: "no-session" };
+    return session.buildResult();
+  }
+
   isComplete() {
     return (
       this.#sessions.player1.isComplete() && this.#sessions.player2.isComplete()
@@ -61,12 +67,16 @@ export default class DeploymentManager {
   buildDeployments() {
     const result1 = this.#sessions.player1.buildResult();
     const result2 = this.#sessions.player2.buildResult();
+
     if (!result1.ok) return { ok: false, who: "player1", ...result1 };
     if (!result2.ok) return { ok: false, who: "player2", ...result2 };
 
     return {
       ok: true,
-      deployments: { player1: result1.deployment, player2: result2.deployment },
+      deployments: {
+        player1: result1.deployment,
+        player2: result2.deployment,
+      },
     };
   }
 
@@ -89,6 +99,12 @@ export default class DeploymentManager {
           name: ship.getName(),
           positions: ship.getPositions().map((point) => ({ ...point })),
         })),
+        hits: board.getHits
+          ? board.getHits().map((point) => ({ ...point }))
+          : [],
+        misses: board.getMisses
+          ? board.getMisses().map((point) => ({ ...point }))
+          : [],
       },
     };
   }
