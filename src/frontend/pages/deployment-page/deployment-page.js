@@ -93,7 +93,7 @@ export default class DeploymentPage {
     this.#undoButton.addEventListener("click", this.#onUndoClicked);
 
     this.#onStateChanged = (state) => {
-      this.#updateFromState(state);
+      this.#renderFromState(state);
     };
 
     this.#onShowPreview = (point) =>
@@ -111,7 +111,7 @@ export default class DeploymentPage {
     this.#container.appendChild(this.#element);
   }
 
-  #updateFromState(state) {
+  #renderFromState(state) {
     const deployment = state.getDeployment() ?? null;
     if (!deployment) return;
 

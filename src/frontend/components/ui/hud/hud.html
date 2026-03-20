@@ -1,10 +1,11 @@
 <div class="hud">
-  <div class="hud-row hud-row--top">
-    <div class="hud-title">Status</div>
-    <div class="hud-turn turn-display"></div>
-  </div>
+  <div class="turn-display"></div>
+  <div class="action-display"></div>
 
-  <div class="hud-row hud-row--bottom">
-    <div class="hud-action action-display"></div>
+  <div class="buttons">
+    <button class="game-button" data-action="undo">Undo</button>
+    <button class="game-button" data-action="redo">Redo</button>
+    <button class="game-button" data-action="togglePause">Pause AI</button>
+    <button class="game-button" data-action="restart">Restart</button>
   </div>
 </div>

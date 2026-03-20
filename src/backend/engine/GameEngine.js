@@ -84,7 +84,7 @@ export default class GameEngine {
     this.#prepareDeploymentFlow(playerDetails);
 
     if (this.#deploymentOrder.length === 0) {
-      this.#finishDeployment();
+      this.#completeDeployment();
       return;
     }
 
@@ -111,7 +111,7 @@ export default class GameEngine {
       return;
     }
 
-    this.#finishDeployment();
+    this.#completeDeployment();
   }
 
   #prepareDeploymentFlow(playerDetails) {
@@ -137,7 +137,7 @@ export default class GameEngine {
     this.#deployingFor = this.#deploymentOrder[this.#deploymentIndex];
   }
 
-  #finishDeployment() {
+  #completeDeployment() {
     const build = this.#deploymentManager.buildDeployments();
     if (!build.ok) {
       console.log("failed to build deployments", build);
@@ -200,15 +200,7 @@ export default class GameEngine {
   }
 
   emitState() {
-    const state = GameStateAdapter.toState({
-      phase: this.#phase,
-      turnManager: this.#turnManager,
-      commandHistory: this.#commandHistory,
-      deploymentManager: this.#deploymentManager,
-      deployingFor: this.#deployingFor,
-    });
-
-    EventBus.emit("state changed", state);
+    EventBus.emit("state changed", this.getState());
   }
 
   gameIsWon(board) {
@@ -233,5 +225,15 @@ export default class GameEngine {
 
   getDeployingFor() {
     return this.#deployingFor;
+  }
+
+  getState() {
+    return GameStateAdapter.toState({
+      phase: this.#phase,
+      turnManager: this.#turnManager,
+      commandHistory: this.#commandHistory,
+      deploymentManager: this.#deploymentManager,
+      deployingFor: this.#deployingFor,
+    });
   }
 }

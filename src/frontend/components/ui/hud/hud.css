@@ -53,3 +53,27 @@
   opacity: 1;
   font-weight: 700;
 }
+
+.game-button {
+  border: 1px solid #222;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  background: #111;
+  color: #fff;
+  cursor: pointer;
+}
+
+.game-button:active {
+  transform: translateY(1px);
+}
+
+.game-button.disabled {
+  pointer-events: none;
+  cursor: default;
+  opacity: 0.5;
+}
+
+.game-button.hidden {
+  display: none;
+}

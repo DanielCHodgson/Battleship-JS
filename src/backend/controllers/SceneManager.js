@@ -29,11 +29,9 @@ export default class SceneManager {
       this.destroy();
 
       if (!this.#setupPage) {
-        this.#setupPage = new SetupPage(this.#container);
+        this.#setupPage = new SetupPage(this.#container, this.#engine);
       }
-
       this.#setupPage.open();
-
       return;
     }
 
@@ -54,7 +52,7 @@ export default class SceneManager {
       this.destroy();
 
       if (!this.#gamePage) {
-        this.#gamePage = new GamePage();
+        this.#gamePage = new GamePage(this.#engine);
         this.#gamePage.open();
       }
     }
@@ -76,7 +74,7 @@ export default class SceneManager {
   getDeploymentPage() {
     return this.#deploymentPage;
   }
-  
+
   getGamePage() {
     return this.#gamePage;
   }
