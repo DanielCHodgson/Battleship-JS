@@ -10,6 +10,7 @@ describe("GameEngine flow", () => {
   let onStateChanged;
 
   beforeEach(() => {
+    jest.useFakeTimers();
     states = [];
     onStateChanged = (state) => states.push(state);
     EventBus.on("state changed", onStateChanged);
@@ -19,6 +20,8 @@ describe("GameEngine flow", () => {
   afterEach(() => {
     engine.destroy();
     EventBus.off("state changed", onStateChanged);
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
   });
 
   function deployHumanGame() {
@@ -51,7 +54,7 @@ describe("GameEngine flow", () => {
     expect(finalState.getTurn().getPlayer().getName()).toBe("Player 1");
   });
 
-  test("emits once for an attack, undo, and redo", () => {
+  test("shows attack feedback before resolving the turn", () => {
     let state = deployHumanGame();
     states.length = 0;
     const targetBoard = state.getTurn().getTargetBoard();
@@ -59,8 +62,20 @@ describe("GameEngine flow", () => {
 
     expect(engine.handleAttack(point)).toBe(true);
     expect(states).toHaveLength(1);
-    expect(states.at(-1).getTurnNumber()).toBe(2);
+    expect(states.at(-1).getTurnNumber()).toBe(1);
+    expect(states.at(-1).getAttackFeedback()).toEqual({
+      result: "miss",
+      point,
+    });
     expect(targetBoard.getMisses()).toContainEqual(point);
+
+    jest.advanceTimersByTime(449);
+    expect(states).toHaveLength(1);
+
+    jest.advanceTimersByTime(1);
+    expect(states).toHaveLength(2);
+    expect(states.at(-1).getTurnNumber()).toBe(2);
+    expect(states.at(-1).getAttackFeedback()).toBeNull();
 
     states.length = 0;
     expect(engine.undo()).toEqual({ ok: true });
@@ -96,6 +111,9 @@ describe("GameEngine flow", () => {
       expect(board.getMisses()).toEqual([]);
       board.getShips().forEach((ship) => expect(ship.getHits()).toBe(0));
     });
+
+    jest.runAllTimers();
+    expect(states).toHaveLength(1);
   });
 
   test("a winning attack can be undone", () => {
@@ -109,6 +127,16 @@ describe("GameEngine flow", () => {
     });
 
     engine.handleAttack({ x: 0, y: 0 });
+    expect(states.at(-1).getPhase()).toBe("playing");
+    expect(states.at(-1).getAttackFeedback()).toEqual({
+      result: "hit",
+      point: { x: 0, y: 0 },
+    });
+
+    jest.advanceTimersByTime(1199);
+    expect(states.at(-1).getPhase()).toBe("playing");
+
+    jest.advanceTimersByTime(1);
     expect(states.at(-1).getPhase()).toBe("gameover");
 
     states.length = 0;
@@ -117,5 +145,20 @@ describe("GameEngine flow", () => {
     expect(states.at(-1).getPhase()).toBe("playing");
     expect(board2.getHits()).toEqual([]);
     expect(board2.getShips()[0].getHits()).toBe(0);
+  });
+
+  test("quit cancels a pending turn and returns to setup", () => {
+    const state = deployHumanGame();
+    const point = findEmptyPoint(state.getTurn().getTargetBoard());
+    engine.handleAttack(point);
+    states.length = 0;
+
+    expect(engine.quitGame()).toEqual({ ok: true });
+    expect(states).toHaveLength(1);
+    expect(states.at(-1).getPhase()).toBe("setup");
+    expect(engine.getPlayers()).toEqual({});
+
+    jest.runAllTimers();
+    expect(states).toHaveLength(1);
   });
 });

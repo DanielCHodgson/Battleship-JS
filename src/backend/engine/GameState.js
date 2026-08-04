@@ -5,6 +5,7 @@ export default class GameState {
   #canUndo;
   #canRedo;
   #deployment;
+  #attackFeedback;
 
   constructor({
     turn,
@@ -13,6 +14,7 @@ export default class GameState {
     canUndo = false,
     canRedo = false,
     deployment = null,
+    attackFeedback = null,
   }) {
     this.#turn = turn;
     this.#turnNumber = turnNumber;
@@ -20,6 +22,7 @@ export default class GameState {
     this.#canUndo = canUndo;
     this.#canRedo = canRedo;
     this.#deployment = deployment;
+    this.#attackFeedback = attackFeedback;
   }
 
   getTurn() {
@@ -44,5 +47,9 @@ export default class GameState {
 
   getDeployment() {
     return this.#deployment;
+  }
+
+  getAttackFeedback() {
+    return this.#attackFeedback;
   }
 }

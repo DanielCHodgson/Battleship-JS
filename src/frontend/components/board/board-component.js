@@ -16,6 +16,7 @@ export default class BoardComponent {
     this.#container = container;
     this.#interactive = interactive;
     this.#element = DomUtility.stringToHTML(htmlString);
+    this.#element.classList.toggle("non-interactive", !interactive);
     this.#grid = this.createGrid();
     this.#cellMap = this.#createCellMap();
     this.renderElement();
@@ -39,6 +40,7 @@ export default class BoardComponent {
     square.dataset.col = col;
 
     const onClick = () => {
+      if (!this.#interactive) return;
       EventBus.emit("point selected", {
         x: col,
         y: row,
@@ -46,6 +48,7 @@ export default class BoardComponent {
     };
 
     const onHover = () => {
+      if (!this.#interactive) return;
       EventBus.emit("point hovered", {
         x: col,
         y: row,
@@ -123,6 +126,15 @@ export default class BoardComponent {
     if (!cell) return;
 
     cell.classList.toggle("ai-preview", on);
+  }
+
+  setInteractive(interactive) {
+    this.#interactive = interactive;
+    this.#element?.classList.toggle("non-interactive", !interactive);
+  }
+
+  setHoverEnabled(enabled) {
+    this.#element?.classList.toggle("hover-disabled", !enabled);
   }
 
   paintCell(x, y, type) {

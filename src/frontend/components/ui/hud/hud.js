@@ -5,6 +5,7 @@ import EventBus from "../../../../backend/utilities/EventBus";
 
 export default class Hud {
   #container;
+  #buttonContainer;
   #element;
 
   #fields = {
@@ -20,17 +21,23 @@ export default class Hud {
     onButtonsClick: null,
   };
 
-  constructor(container) {
+  constructor(container, buttonContainer) {
     this.#container = container;
+    this.#buttonContainer = buttonContainer;
     this.#element = DomUtility.stringToHTML(htmlString);
 
-    this.render();
     this.#cacheFields();
+    this.render();
     this.#bindEvents();
     this.#registerEvents();
   }
 
   render() {
+    const { buttons } = this.#fields;
+    if (buttons && this.#buttonContainer && !buttons.isConnected) {
+      this.#buttonContainer.appendChild(buttons);
+    }
+
     if (!this.#element.isConnected) {
       this.#container.appendChild(this.#element);
     }
@@ -81,7 +88,7 @@ export default class Hud {
     this.#renderButtons(state, turn, phase);
     this.#renderPauseUi();
     this.#renderTurnInfo(turn);
-    this.#renderActionInfo(turn, phase);
+    this.#renderActionInfo(state, turn, phase);
   }
 
   #resetTurnUi() {
@@ -131,14 +138,25 @@ export default class Hud {
     turnDisplay.textContent = `Turn ${round} — ${playerName}`;
   }
 
-  #renderActionInfo(turn, phase) {
+  #renderActionInfo(state, turn, phase) {
     const { actionDisplay } = this.#fields;
     if (!actionDisplay) return;
 
     const playerName = turn.getPlayer().getName();
     const round = turn.getRound();
 
-    actionDisplay.classList.remove("is-alert");
+    actionDisplay.classList.remove("is-alert", "is-hit", "is-miss");
+
+    const feedback = state.getAttackFeedback();
+    if (feedback) {
+      const coordinate = this.#formatCoordinate(feedback.point);
+      const didHit = feedback.result === "hit";
+      actionDisplay.textContent = didHit
+        ? `Hit! — ${coordinate}`
+        : `Miss — ${coordinate}`;
+      actionDisplay.classList.add(didHit ? "is-hit" : "is-miss");
+      return;
+    }
 
     if (phase === "gameover") {
       actionDisplay.textContent = `Game Over — ${playerName} won in ${round} turns.`;
@@ -152,6 +170,11 @@ export default class Hud {
     }
 
     actionDisplay.textContent = "Pick a target square.";
+  }
+
+  #formatCoordinate(point) {
+    const column = String.fromCharCode(65 + point.x);
+    return `${column}${point.y + 1}`;
   }
 
   destroy() {
@@ -170,6 +193,10 @@ export default class Hud {
       this.#element.parentNode.removeChild(this.#element);
     }
 
+    if (this.#fields.buttons?.parentNode) {
+      this.#fields.buttons.parentNode.removeChild(this.#fields.buttons);
+    }
+
     this.#handlers = {
       onAiStatus: null,
       onButtonsClick: null,
@@ -182,6 +209,7 @@ export default class Hud {
     };
 
     this.#container = null;
+    this.#buttonContainer = null;
     this.#element = null;
     this.#aiPaused = false;
   }

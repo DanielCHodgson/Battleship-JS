@@ -7,6 +7,8 @@ export default class GameStateAdapter {
     commandHistory,
     deploymentManager,
     deployingFor,
+    attackFeedback,
+    hasPendingTurn = false,
   }) {
     const turn = turnManager ? turnManager.getCurrentTurn() : null;
     const turnNumber = turnManager ? turnManager.getTurnNumber() : 0;
@@ -19,10 +21,12 @@ export default class GameStateAdapter {
     const canUndo =
       phase === "deploying"
         ? (deployment?.placedShips?.length ?? 0) > 0
-        : (commandHistory?.canUndo?.() ?? false);
+        : hasPendingTurn || (commandHistory?.canUndo?.() ?? false);
 
     const canRedo =
-      phase === "deploying" ? false : (commandHistory?.canRedo?.() ?? false);
+      phase === "deploying" || hasPendingTurn
+        ? false
+        : (commandHistory?.canRedo?.() ?? false);
 
     return new GameState({
       turn,
@@ -31,6 +35,7 @@ export default class GameStateAdapter {
       canUndo,
       canRedo,
       deployment,
+      attackFeedback,
     });
   }
 }

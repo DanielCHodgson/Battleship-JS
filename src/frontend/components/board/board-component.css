@@ -7,8 +7,9 @@
 
 .gameboard {
   position: relative;
-
-  width: min(100%, 100cqh);
+  width: 100%;
+  max-width: 100%;
+  height: auto;
   aspect-ratio: 1 / 1;
 
   display: grid;
@@ -43,7 +44,6 @@
 .square {
   background: #f8fafc;
   border: 1px solid rgba(15, 23, 42, 0.1);
-  border: none;
 
   display: flex;
   justify-content: center;
@@ -67,13 +67,18 @@
   outline-offset: -2px;
 }
 
-.square:hover:not(.disabled):not(.hit):not(.miss) {
+.gameboard:not(.hover-disabled):not(.non-interactive)
+  .square:hover:not(.disabled):not(.hit):not(.miss) {
   background: var(--target-color);
   border-color: rgba(15, 23, 42, 0.18);
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
 }
 
-.square:active:not(.disabled) {
+.gameboard.non-interactive .square {
+  cursor: default;
+}
+
+.gameboard:not(.non-interactive) .square:active:not(.disabled) {
   transform: scale(0.95);
   box-shadow: inset 0 1px 4px rgba(15, 23, 42, 0.18);
 }

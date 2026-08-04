@@ -11,6 +11,7 @@ export default class GamePage {
   #element;
 
   #display = null;
+  #controlMount = null;
   #board1 = null;
   #board2 = null;
 
@@ -28,7 +29,7 @@ export default class GamePage {
   open() {
     this.render();
     this.#cacheFields();
-    this.#hudComponent = new Hud(this.#display);
+    this.#hudComponent = new Hud(this.#display, this.#controlMount);
     this.#activeBoard = new BoardComponent(this.#board1, { interactive: false });
     this.#targetBoard = new BoardComponent(this.#board2);
     this.#registerEvents();
@@ -36,15 +37,20 @@ export default class GamePage {
 
   #cacheFields() {
     this.#display = this.#element.querySelector(".display");
+    this.#controlMount = this.#element.querySelector(".control-mount");
     this.#board1 = this.#element.querySelector(".board1");
     this.#board2 = this.#element.querySelector(".board2");
   }
 
   #registerEvents() {
-    this.#handlers.onShowAiPreview = (point) =>
+    this.#handlers.onShowAiPreview = (point) => {
+      this.#targetBoard?.setHoverEnabled(false);
       this.#targetBoard?.setPreview(point, true);
-    this.#handlers.onClearAiPreview = (point) =>
+    };
+    this.#handlers.onClearAiPreview = (point) => {
       this.#targetBoard?.setPreview(point, false);
+      this.#targetBoard?.setHoverEnabled(true);
+    };
 
     EventBus.on("show ai preview", this.#handlers.onShowAiPreview);
     EventBus.on("clear ai preview", this.#handlers.onClearAiPreview);
@@ -56,6 +62,9 @@ export default class GamePage {
     const turn = state.getTurn();
     if (!turn) return;
 
+    this.#targetBoard.setInteractive(
+      !turn.getPlayer().isAI() && !state.getAttackFeedback(),
+    );
     this.#hudComponent?.renderState(state);
     this.#activeBoard.renderActivePlayerState(
       this.#serializeBoard(turn.getPlayer().getBoard()),
@@ -84,6 +93,7 @@ export default class GamePage {
     this.#targetBoard = null;
     this.#activeBoard = null;
     this.#display = null;
+    this.#controlMount = null;
     this.#board1 = null;
     this.#board2 = null;
     this.#element = null;

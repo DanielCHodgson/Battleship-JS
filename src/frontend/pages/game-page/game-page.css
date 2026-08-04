@@ -1,77 +1,126 @@
 .game {
   width: 100%;
-  height: 100%;
-  min-height: 0;
-
+  min-height: 100%;
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr 1fr;
-  gap: 2rem;
+  grid-template-columns:
+    minmax(180px, 220px)
+    minmax(280px, 420px)
+    minmax(220px, 300px);
+  align-items: start;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  overflow: auto;
 }
 
-.boards {
+.game .control-panel,
+.game .message-panel {
+  min-width: 0;
+  margin-top: 2.75rem;
   display: grid;
-  grid-template-rows: 1fr 1fr;
-  gap: 1rem;
-  min-height: 0;
-  grid-column-start: 2;
+  gap: 0.75rem;
 }
 
-.player-board,
-.target-board {
-  display: grid;
-  padding: 0.5rem 0;
-  grid-template-rows: auto 1fr;
-  gap: 0.5rem;
-  min-height: 0;
-  justify-content: right;
-}
-
-.player-board h2,
-.target-board h2 {
-  margin: 0;
+.game .control-panel > h2,
+.game .message-panel > h2,
+.game .player-board h2,
+.game .target-board h2 {
   line-height: 1.2;
 }
 
-.board1,
-.board2 {
-  min-height: 0;
+.game .boards {
+  width: min(100%, calc((100dvh - 8rem) / 2));
+  min-width: 0;
+  justify-self: center;
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 1rem;
 }
 
-.board1 > .gameboard,
-.board2 > .gameboard {
-  height: 100%;
+.game .player-board,
+.game .target-board {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 0.5rem;
 }
-.board1 > .gameboard {
+
+.game .board1,
+.game .board2 {
+  width: 100%;
+  min-width: 0;
+}
+
+.game .board1 > .gameboard,
+.game .board2 > .gameboard {
+  width: 100%;
+  height: auto;
+  margin-inline: auto;
+}
+
+.game .board1 > .gameboard {
   pointer-events: none;
 }
 
-
-.player-board .gameboard {
+.game .player-board .gameboard {
   opacity: 0.9;
 }
 
-.ui {
-  min-height: 0;
-  display: grid;
-  grid-template-rows: auto auto 1fr;
-  gap: 2rem;
-  padding: 5rem 0;
+.game .control-mount,
+.game .display {
+  min-width: 0;
 }
 
-.display {
-  width: 100%;
+.game .control-mount {
+  border: 1px solid #222;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 3px 3px 0 #111;
+  padding: 1rem;
 }
 
-.buttons {
+.game .control-mount .buttons {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  justify-content: flex-start;
 }
 
-.boards > * {
-  min-height: 0;
+@media (max-width: 950px) {
+  .game {
+    grid-template-columns: minmax(160px, 210px) minmax(280px, 420px);
+  }
+
+  .game .boards {
+    width: min(100%, 420px);
+  }
+
+  .game .message-panel {
+    grid-column: 1 / -1;
+    margin-top: 0;
+  }
 }
-.ui > * {
-  min-height: 0;
+
+@media (max-width: 650px) {
+  .game {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .game .control-panel,
+  .game .message-panel {
+    margin-top: 0;
+  }
+
+  .game .control-panel {
+    order: 2;
+  }
+
+  .game .boards {
+    width: min(100%, 420px);
+    order: 1;
+  }
+
+  .game .message-panel {
+    order: 3;
+    grid-column: auto;
+  }
 }

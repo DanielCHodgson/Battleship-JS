@@ -29,6 +29,11 @@ export default class CommandHistory {
     return result;
   }
 
+  recordExecutedCommand(command) {
+    this.#redoStack.length = 0;
+    this.#history.push(command);
+  }
+
   canUndo() {
     return this.#history.length > 0;
   }

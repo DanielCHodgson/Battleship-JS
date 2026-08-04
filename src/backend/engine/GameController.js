@@ -19,6 +19,7 @@ export default class GameController {
   #onMoveUndo;
   #onMoveRedo;
   #onGameRestart;
+  #onGameQuit;
 
   constructor() {
     this.#gameEngine = new GameEngine();
@@ -67,6 +68,7 @@ export default class GameController {
     this.#onMoveUndo = () => this.#gameEngine.undo();
     this.#onMoveRedo = () => this.#gameEngine.redo();
     this.#onGameRestart = () => this.#gameEngine.restart();
+    this.#onGameQuit = () => this.#gameEngine.quitGame();
   }
 
   #registerEvents() {
@@ -86,6 +88,7 @@ export default class GameController {
     EventBus.on("undo", this.#onMoveUndo);
     EventBus.on("redo", this.#onMoveRedo);
     EventBus.on("restart", this.#onGameRestart);
+    EventBus.on("quit", this.#onGameQuit);
   }
 
   destroy() {
@@ -105,6 +108,7 @@ export default class GameController {
     EventBus.off("undo", this.#onMoveUndo);
     EventBus.off("redo", this.#onMoveRedo);
     EventBus.off("restart", this.#onGameRestart);
+    EventBus.off("quit", this.#onGameQuit);
 
     this.#sceneManager.destroy();
     this.#gameEngine.destroy();
