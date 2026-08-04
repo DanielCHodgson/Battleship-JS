@@ -9,7 +9,6 @@ import EventBus from "../../../backend/utilities/EventBus";
 export default class GamePage {
   #container;
   #element;
-  #gameEngine;
 
   #display = null;
   #board1 = null;
@@ -21,8 +20,7 @@ export default class GamePage {
 
   #handlers = {};
 
-  constructor(gameEngine, container = document.querySelector(".app-wrapper")) {
-    this.#gameEngine = gameEngine;
+  constructor(container = document.querySelector(".app-wrapper")) {
     this.#container = container;
     this.#element = DomUtility.stringToHTML(htmlString);
   }
@@ -31,10 +29,9 @@ export default class GamePage {
     this.render();
     this.#cacheFields();
     this.#hudComponent = new Hud(this.#display);
-    this.#activeBoard = new BoardComponent(this.#board1);
+    this.#activeBoard = new BoardComponent(this.#board1, { interactive: false });
     this.#targetBoard = new BoardComponent(this.#board2);
     this.#registerEvents();
-    this.renderFromState(this.#gameEngine.getState());
   }
 
   #cacheFields() {
@@ -44,31 +41,35 @@ export default class GamePage {
   }
 
   #registerEvents() {
-    this.#handlers.onStateChanged = (state) => this.renderFromState(state);
-    EventBus.on("state changed", this.#handlers.onStateChanged);
+    this.#handlers.onShowAiPreview = (point) =>
+      this.#targetBoard?.setPreview(point, true);
+    this.#handlers.onClearAiPreview = (point) =>
+      this.#targetBoard?.setPreview(point, false);
+
+    EventBus.on("show ai preview", this.#handlers.onShowAiPreview);
+    EventBus.on("clear ai preview", this.#handlers.onClearAiPreview);
   }
 
-  renderFromState(state) {
+  renderState(state) {
     if (!this.#activeBoard || !this.#targetBoard || !state) return;
 
     const turn = state.getTurn();
     if (!turn) return;
 
+    this.#hudComponent?.renderState(state);
     this.#activeBoard.renderActivePlayerState(
       this.#serializeBoard(turn.getPlayer().getBoard()),
       turn.getPlayer().isAI(),
       turn.getEnemy().isAI(),
     );
-
     this.#targetBoard.renderTargetPlayerState(
       this.#serializeBoard(turn.getEnemy().getBoard()),
     );
   }
 
   destroy() {
-    if (this.#handlers.onStateChanged) {
-      EventBus.off("state changed", this.#handlers.onStateChanged);
-    }
+    EventBus.off("show ai preview", this.#handlers.onShowAiPreview);
+    EventBus.off("clear ai preview", this.#handlers.onClearAiPreview);
 
     this.#hudComponent?.destroy();
     this.#targetBoard?.destroy();

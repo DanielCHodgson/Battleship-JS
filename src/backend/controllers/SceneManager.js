@@ -10,23 +10,43 @@ export default class SceneManager {
   #setupPage = null;
   #deploymentPage = null;
   #gamePage = null;
+  #currentScene = null;
+  #onStateChanged;
 
   constructor(container, engine) {
     this.#container = container;
     this.#engine = engine;
 
-    EventBus.on("state changed", (gameState) => {
-      this.#renderForPhase(gameState.getPhase());
-    });
+    this.#onStateChanged = (gameState) => this.#renderState(gameState);
+    EventBus.on("state changed", this.#onStateChanged);
   }
 
   launch() {
-    this.#renderForPhase(this.#engine.getPhase());
+    this.#openScene(this.#engine.getPhase());
   }
 
-  #renderForPhase(phase) {
-    if (phase === "setup") {
-      this.destroy();
+  #renderState(gameState) {
+    const phase = gameState.getPhase();
+    const scene = this.#getSceneName(phase);
+
+    if (scene !== this.#currentScene) this.#openScene(phase);
+
+    if (scene === "deployment") this.#deploymentPage?.renderState(gameState);
+    if (scene === "game") this.#gamePage?.renderState(gameState);
+  }
+
+  #getSceneName(phase) {
+    if (phase === "deploying") return "deployment";
+    if (phase === "playing" || phase === "gameover") return "game";
+    return "setup";
+  }
+
+  #openScene(phase) {
+    const scene = this.#getSceneName(phase);
+    this.#destroyCurrentPage();
+    this.#currentScene = scene;
+
+    if (scene === "setup") {
 
       if (!this.#setupPage) {
         this.#setupPage = new SetupPage(this.#container, this.#engine);
@@ -35,9 +55,7 @@ export default class SceneManager {
       return;
     }
 
-    if (phase === "deploying") {
-      this.destroy();
-
+    if (scene === "deployment") {
       if (!this.#deploymentPage) {
         this.#deploymentPage = new DeploymentPage(
           this.#container,
@@ -48,23 +66,28 @@ export default class SceneManager {
       return;
     }
 
-    if (phase === "playing" || phase === "gameover") {
-      this.destroy();
-
+    if (scene === "game") {
       if (!this.#gamePage) {
-        this.#gamePage = new GamePage(this.#engine);
+        this.#gamePage = new GamePage(this.#container);
         this.#gamePage.open();
       }
     }
   }
 
-  destroy() {
+  #destroyCurrentPage() {
     this.#setupPage?.destroy();
     this.#deploymentPage?.destroy();
     this.#gamePage?.destroy();
     this.#setupPage = null;
     this.#gamePage = null;
     this.#deploymentPage = null;
+  }
+
+  destroy() {
+    EventBus.off("state changed", this.#onStateChanged);
+    this.#destroyCurrentPage();
+    this.#currentScene = null;
+    this.#onStateChanged = null;
   }
 
   getSetupPage() {

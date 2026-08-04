@@ -25,12 +25,12 @@ export default class PlayerFactory {
     return {
       player1: this.createPlayerFromDeployment({
         name: setupDetails.player1.name,
-        isAi: setupDetails.player1.isAi ?? setupDetails.player1.isAI,
+        isAI: setupDetails.player1.isAi ?? setupDetails.player1.isAI,
         deployment: deployments.player1,
       }),
       player2: this.createPlayerFromDeployment({
         name: setupDetails.player2.name,
-        isAi: setupDetails.player2.isAi ?? setupDetails.player2.isAI,
+        isAI: setupDetails.player2.isAi ?? setupDetails.player2.isAI,
         deployment: deployments.player2,
       }),
     };

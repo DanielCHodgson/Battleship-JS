@@ -14,8 +14,6 @@ export default class GameController {
   #onDeploymentUndo;
 
   #onDeploySubmit;
-  #onDeploymentCompleted;
-
   #onPointSelected;
 
   #onMoveUndo;
@@ -42,45 +40,28 @@ export default class GameController {
       const phase = this.#gameEngine.getPhase();
 
       if (phase === "deploying") {
-        this.#gameEngine
-          .getDeploymentManager()
-          .place(this.#gameEngine.getDeployingFor(), point);
-        this.#gameEngine.emitState();
+        this.#gameEngine.placeDeploymentShip(point);
       } else if (phase === "playing") {
         this.#gameEngine.handleAttack(point);
-        this.#gameEngine.emitState();
       }
     };
 
     this.#onDeploySubmit = () => this.#gameEngine.deploySubmit();
 
-    this.#onDeploymentCompleted = (players) =>
-      this.#gameEngine.startGame(players);
-
     this.#onDeploymentShipSelected = (shipName) => {
-      this.#gameEngine
-        .getDeploymentManager()
-        .selectShip(this.#gameEngine.getDeployingFor(), shipName);
-      this.#gameEngine.emitState();
+      this.#gameEngine.selectDeploymentShip(shipName);
     };
 
     this.#onDeploymentDirectionSelected = (direction) => {
-      this.#gameEngine
-        .getDeploymentManager()
-        .setDirection(this.#gameEngine.getDeployingFor(), direction);
-      this.#gameEngine.emitState();
+      this.#gameEngine.setDeploymentDirection(direction);
     };
 
     this.#onDeploymentRandomize = () => {
-      this.#gameEngine.getDeploymentManager().randomize(this.#gameEngine.getDeployingFor());
-      this.#gameEngine.emitState();
+      this.#gameEngine.randomizeDeployment();
     };
 
     this.#onDeploymentUndo = () => {
-      this.#gameEngine
-        .getDeploymentManager()
-        .undo(this.#gameEngine.getDeployingFor());
-      this.#gameEngine.emitState();
+      this.#gameEngine.undoDeployment();
     };
 
     this.#onMoveUndo = () => this.#gameEngine.undo();
@@ -92,8 +73,6 @@ export default class GameController {
     EventBus.on("setup submitted", this.#onSetupSubmitted);
 
     EventBus.on("deploy submit", this.#onDeploySubmit);
-    EventBus.on("deployment completed", this.#onDeploymentCompleted);
-
     EventBus.on("point selected", this.#onPointSelected);
 
     EventBus.on("deploy ship selected", this.#onDeploymentShipSelected);
@@ -113,8 +92,6 @@ export default class GameController {
     EventBus.off("setup submitted", this.#onSetupSubmitted);
 
     EventBus.off("deploy submit", this.#onDeploySubmit);
-    EventBus.off("deployment completed", this.#onDeploymentCompleted);
-
     EventBus.off("point selected", this.#onPointSelected);
 
     EventBus.off("deploy ship selected", this.#onDeploymentShipSelected);

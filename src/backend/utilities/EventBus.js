@@ -19,7 +19,7 @@ export default class EventBus {
 
   static emit(event, data) {
     if (!this.events[event]) return;
-    this.events[event].forEach((listener) => listener(data));
+    [...this.events[event]].forEach((listener) => listener(data));
   }
 
   static registerEvents(eventListeners, events) {

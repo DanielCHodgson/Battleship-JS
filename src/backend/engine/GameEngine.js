@@ -18,6 +18,7 @@ export default class GameEngine {
   #playerFactory;
 
   #setupDetails = null;
+  #deployments = null;
   #deploymentManager;
 
   #phase = "setup";
@@ -35,36 +36,49 @@ export default class GameEngine {
       new AiMoveCalculator(),
     );
 
-    this.#commandHistory = new CommandHistory(this);
+    this.#commandHistory = new CommandHistory();
     this.setPhase("setup");
   }
 
   undo() {
     if (this.#phase === "deploying" && this.#deployingFor) {
-      this.#deploymentManager.undo(this.#deployingFor);
-      this.emitState();
-      return;
+      const result = this.#deploymentManager.undo(this.#deployingFor);
+      if (result.ok) this.emitState();
+      return result;
     }
 
-    if (this.#phase === "playing") {
-      this.#commandHistory.undoLastCommand();
-      this.emitState();
+    if (this.#phase === "playing" || this.#phase === "gameover") {
+      const didUndo = this.#commandHistory.undoLastCommand();
+      if (didUndo) {
+        this.emitState();
+        return { ok: true };
+      }
+      return { ok: false, reason: "nothing-to-undo" };
     }
+
+    return { ok: false, reason: "undo-not-available" };
   }
 
   redo() {
-    if (this.#phase !== "playing") return;
-    this.#commandHistory.redoCommand();
-    this.emitState();
+    if (this.#phase !== "playing") {
+      return { ok: false, reason: "redo-not-available" };
+    }
+
+    const result = this.#commandHistory.redoCommand();
+    if (result !== false) {
+      this.emitState();
+      return { ok: true };
+    }
+    return { ok: false, reason: "nothing-to-redo" };
   }
 
   restart() {
     if (this.#phase === "deploying") {
       this.startDeployment(this.#setupDetails);
-      return;
+      return { ok: true };
     }
 
-    this.#restartGame();
+    return this.#restartGame();
   }
 
   destroy() {
@@ -78,40 +92,92 @@ export default class GameEngine {
   }
 
   startDeployment(playerDetails) {
+    if (!playerDetails?.player1 || !playerDetails?.player2) {
+      return { ok: false, reason: "invalid-player-details" };
+    }
+
     this.#setupDetails = playerDetails;
+    this.#deployments = null;
     this.#deploymentManager.reset();
 
     this.#prepareDeploymentFlow(playerDetails);
 
     if (this.#deploymentOrder.length === 0) {
-      this.#completeDeployment();
-      return;
+      return this.#completeDeployment();
     }
 
     this.#deploymentIndex = 0;
     this.#deployingFor = this.#deploymentOrder[this.#deploymentIndex];
     this.setPhase("deploying");
     this.emitState();
+    return { ok: true };
+  }
+
+  selectDeploymentShip(name) {
+    if (this.#phase !== "deploying" || !this.#deployingFor) {
+      return { ok: false, reason: "not-deploying" };
+    }
+    const result = this.#deploymentManager.selectShip(this.#deployingFor, name);
+    if (result.ok) this.emitState();
+    return result;
+  }
+
+  setDeploymentDirection(direction) {
+    if (this.#phase !== "deploying" || !this.#deployingFor) {
+      return { ok: false, reason: "not-deploying" };
+    }
+    const result = this.#deploymentManager.setDirection(
+      this.#deployingFor,
+      direction,
+    );
+    if (result.ok) this.emitState();
+    return result;
+  }
+
+  placeDeploymentShip(point) {
+    if (this.#phase !== "deploying" || !this.#deployingFor) {
+      return { ok: false, reason: "not-deploying" };
+    }
+    const result = this.#deploymentManager.place(this.#deployingFor, point);
+    if (result.ok) this.emitState();
+    return result;
+  }
+
+  randomizeDeployment() {
+    if (this.#phase !== "deploying" || !this.#deployingFor) {
+      return { ok: false, reason: "not-deploying" };
+    }
+    const result = this.#deploymentManager.randomize(this.#deployingFor);
+    if (result.ok) this.emitState();
+    return result;
+  }
+
+  undoDeployment() {
+    if (this.#phase !== "deploying" || !this.#deployingFor) {
+      return { ok: false, reason: "not-deploying" };
+    }
+    const result = this.#deploymentManager.undo(this.#deployingFor);
+    if (result.ok) this.emitState();
+    return result;
   }
 
   deploySubmit() {
-    if (this.#phase !== "deploying") return;
-    if (!this.#deployingFor) return;
+    if (this.#phase !== "deploying" || !this.#deployingFor) {
+      return { ok: false, reason: "not-deploying" };
+    }
 
     const result = this.#deploymentManager.validatePlayer(this.#deployingFor);
     if (!result.ok) {
-      console.log("deployment not complete", result.reason);
-      this.emitState();
-      return;
+      return result;
     }
 
     if (this.#hasNextDeploymentPlayer()) {
       this.#advanceDeploymentPlayer();
       this.emitState();
-      return;
+      return { ok: true };
     }
 
-    this.#completeDeployment();
+    return this.#completeDeployment();
   }
 
   #prepareDeploymentFlow(playerDetails) {
@@ -140,23 +206,29 @@ export default class GameEngine {
   #completeDeployment() {
     const build = this.#deploymentManager.buildDeployments();
     if (!build.ok) {
-      console.log("failed to build deployments", build);
-      return;
+      return build;
     }
 
+    this.#deployments = build.deployments;
+
+    this.startGame(this.#createPlayersFromDeployments());
+    return { ok: true };
+  }
+
+  #createPlayersFromDeployments() {
     const player1 = this.#playerFactory.createPlayerFromDeployment({
       name: this.#setupDetails.player1.name,
       isAI: this.#setupDetails.player1.isAI,
-      deployment: build.deployments.player1,
+      deployment: this.#deployments.player1,
     });
 
     const player2 = this.#playerFactory.createPlayerFromDeployment({
       name: this.#setupDetails.player2.name,
       isAI: this.#setupDetails.player2.isAI,
-      deployment: build.deployments.player2,
+      deployment: this.#deployments.player2,
     });
 
-    EventBus.emit("deployment completed", { player1, player2 });
+    return { player1, player2 };
   }
 
   startGame(players) {
@@ -168,6 +240,10 @@ export default class GameEngine {
   }
 
   #restartGame() {
+    if (!this.#deployments) {
+      return { ok: false, reason: "no-deployment-to-restart" };
+    }
+
     this.#aiTurnController.destroy();
 
     this.#turnManager = new TurnManager();
@@ -178,17 +254,17 @@ export default class GameEngine {
 
     this.#commandHistory.reset();
     this.setPhase("playing");
-
+    this.#players = this.#createPlayersFromDeployments();
     this.#turnManager.initialize(this.#players);
     this.emitState();
+    return { ok: true };
   }
 
   handleAttack(point) {
-    if (this.#phase !== "playing") return;
-    if (!point) return;
+    if (this.#phase !== "playing" || !point) return false;
 
     const turn = this.#turnManager.getCurrentTurn();
-    if (!turn || turn.hasAttacked()) return;
+    if (!turn || turn.hasAttacked()) return false;
 
     const move = new CompositeCommand([
       new AttackCommand(this.#turnManager, point),
@@ -197,6 +273,7 @@ export default class GameEngine {
 
     const result = this.#commandHistory.executeCommand(move);
     if (result !== false) this.emitState();
+    return result;
   }
 
   emitState() {
@@ -217,10 +294,6 @@ export default class GameEngine {
 
   getPlayers() {
     return this.#players;
-  }
-
-  getDeploymentManager() {
-    return this.#deploymentManager;
   }
 
   getDeployingFor() {

@@ -16,7 +16,6 @@ export default class Hud {
   #aiPaused = false;
 
   #handlers = {
-    onStateChanged: null,
     onAiStatus: null,
     onButtonsClick: null,
   };
@@ -47,38 +46,18 @@ export default class Hud {
     const { buttons } = this.#fields;
     if (!buttons) return;
 
-    this.#handlers.onButtonsClick = (e) => {
-      const button = e.target.closest("button[data-action]");
-      if (!button) return;
+    this.#handlers.onButtonsClick = (event) => {
+      const button = event.target.closest("button[data-action]");
+      if (!button || button.classList.contains("disabled")) return;
 
-      if (button.classList.contains("disabled")) return;
-
-      const action = button.dataset.action;
-
-      switch (action) {
-        case "undo":
-          EventBus.emit("undo");
-          break;
-        case "redo":
-          EventBus.emit("redo");
-          break;
-        case "togglePause":
-          EventBus.emit("togglePause");
-          break;
-        case "restart":
-          EventBus.emit("restart");
-          break;
-      }
+      EventBus.emit(button.dataset.action);
     };
 
     buttons.addEventListener("click", this.#handlers.onButtonsClick);
   }
 
   #registerEvents() {
-    this.#handlers.onStateChanged = (state) => this.renderState(state);
     this.#handlers.onAiStatus = (status) => this.renderAiStatus(status);
-
-    EventBus.on("state changed", this.#handlers.onStateChanged);
     EventBus.on("ai status", this.#handlers.onAiStatus);
   }
 
@@ -123,13 +102,8 @@ export default class Hud {
     const redoBtn = buttons.querySelector('[data-action="redo"]');
     const pauseBtn = buttons.querySelector('[data-action="togglePause"]');
 
-    if (undoBtn) {
-      undoBtn.classList.toggle("disabled", !state.canUndo());
-    }
-
-    if (redoBtn) {
-      redoBtn.classList.toggle("disabled", !state.canRedo());
-    }
+    undoBtn?.classList.toggle("disabled", !state.canUndo());
+    redoBtn?.classList.toggle("disabled", !state.canRedo());
 
     if (pauseBtn) {
       const bothHuman = !turn.getPlayer().isAI() && !turn.getEnemy().isAI();
@@ -139,10 +113,9 @@ export default class Hud {
   }
 
   #renderPauseUi() {
-    const { buttons } = this.#fields;
-    if (!buttons) return;
-
-    const pauseBtn = buttons.querySelector('[data-action="togglePause"]');
+    const pauseBtn = this.#fields.buttons?.querySelector(
+      '[data-action="togglePause"]',
+    );
     if (!pauseBtn) return;
 
     pauseBtn.classList.toggle("is-active", this.#aiPaused);
@@ -155,7 +128,6 @@ export default class Hud {
 
     const round = turn.getRound();
     const playerName = turn.getPlayer().getName();
-
     turnDisplay.textContent = `Turn ${round} — ${playerName}`;
   }
 
@@ -183,10 +155,6 @@ export default class Hud {
   }
 
   destroy() {
-    if (this.#handlers.onStateChanged) {
-      EventBus.off("state changed", this.#handlers.onStateChanged);
-    }
-
     if (this.#handlers.onAiStatus) {
       EventBus.off("ai status", this.#handlers.onAiStatus);
     }
@@ -203,7 +171,6 @@ export default class Hud {
     }
 
     this.#handlers = {
-      onStateChanged: null,
       onAiStatus: null,
       onButtonsClick: null,
     };

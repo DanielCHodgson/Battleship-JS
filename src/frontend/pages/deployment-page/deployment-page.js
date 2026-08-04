@@ -27,10 +27,6 @@ export default class DeploymentPage {
   #onUndoClicked = null;
   #onSubmitClicked = null;
 
-  #onStateChanged = null;
-  #onShowPreview = null;
-  #onClearPreview = null;
-
   constructor(container) {
     this.#container = container;
     this.#element = DomUtility.stringToHTML(htmlString);
@@ -92,18 +88,6 @@ export default class DeploymentPage {
 
     this.#undoButton.addEventListener("click", this.#onUndoClicked);
 
-    this.#onStateChanged = (state) => {
-      this.#renderFromState(state);
-    };
-
-    this.#onShowPreview = (point) =>
-      this.#boardComponent?.setPreview(point, true);
-    this.#onClearPreview = (point) =>
-      this.#boardComponent?.setPreview(point, false);
-
-    EventBus.on("state changed", this.#onStateChanged);
-    EventBus.on("show ai preview", this.#onShowPreview);
-    EventBus.on("clear ai preview", this.#onClearPreview);
   }
 
   renderElement() {
@@ -111,7 +95,7 @@ export default class DeploymentPage {
     this.#container.appendChild(this.#element);
   }
 
-  #renderFromState(state) {
+  renderState(state) {
     const deployment = state.getDeployment() ?? null;
     if (!deployment) return;
 
@@ -172,14 +156,6 @@ export default class DeploymentPage {
   }
 
   destroy() {
-    if (this.#onStateChanged)
-      EventBus.off("state changed", this.#onStateChanged);
-
-    if (this.#onShowPreview)
-      EventBus.off("show ai preview", this.#onShowPreview);
-    if (this.#onClearPreview)
-      EventBus.off("clear ai preview", this.#onClearPreview);
-
     if (this.#onShipClicked) {
       this.#shipItems.forEach((li) =>
         li.removeEventListener("click", this.#onShipClicked),
@@ -225,10 +201,6 @@ export default class DeploymentPage {
     this.#onSubmitClicked = null;
     this.#undoButton = null;
     this.#onUndoClicked = null;
-
-    this.#onStateChanged = null;
-    this.#onShowPreview = null;
-    this.#onClearPreview = null;
 
     this.#boardComponent = null;
     this.#boardContainer = null;

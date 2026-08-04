@@ -10,9 +10,11 @@ export default class BoardComponent {
   #hoverHandlers = new Map();
   #grid = [];
   #cellMap = null;
+  #interactive;
 
-  constructor(container) {
+  constructor(container, { interactive = true } = {}) {
     this.#container = container;
+    this.#interactive = interactive;
     this.#element = DomUtility.stringToHTML(htmlString);
     this.#grid = this.createGrid();
     this.#cellMap = this.#createCellMap();
@@ -50,11 +52,13 @@ export default class BoardComponent {
       });
     };
 
-    square.addEventListener("click", onClick);
-    square.addEventListener("mouseenter", onHover);
+    if (this.#interactive) {
+      square.addEventListener("click", onClick);
+      square.addEventListener("mouseenter", onHover);
 
-    this.#cellHandlers.set(square, onClick);
-    this.#hoverHandlers.set(square, onHover);
+      this.#cellHandlers.set(square, onClick);
+      this.#hoverHandlers.set(square, onHover);
+    }
 
     return square;
   }
@@ -86,6 +90,7 @@ export default class BoardComponent {
   }
 
   renderActivePlayerState(boardState, activePlayerIsAI, enemyPlayerIsAI) {
+    this.clearBoard();
     if (!boardState) return;
 
     if (!activePlayerIsAI || (activePlayerIsAI && enemyPlayerIsAI)) {
@@ -146,6 +151,7 @@ export default class BoardComponent {
   }
 
   clearBoard() {
+    this.#element?.classList.remove("covered");
     this.#grid.forEach((cell) => {
       cell.classList.remove("ship", "hit", "miss", "disabled", "ai-preview");
     });

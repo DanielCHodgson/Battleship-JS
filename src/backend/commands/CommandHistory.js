@@ -1,27 +1,23 @@
 export default class CommandHistory {
-  #gameController;
   #history = [];
   #redoStack = [];
 
-  constructor(gameController) {
-    this.#gameController = gameController;
-  }
-
   undoLastCommand() {
     const command = this.#history.pop();
-    if (!command) return;
+    if (!command) return false;
 
     this.#redoStack.push(command);
     command.undo();
-    this.#gameController.emitState();
+    return true;
   }
 
   redoCommand() {
     const command = this.#redoStack.pop();
-    if (!command) return;
+    if (!command) return false;
 
-    this.executeCommand(command, { fromRedo: true });
-    this.#gameController.emitState();
+    const result = this.executeCommand(command, { fromRedo: true });
+    if (result === false) this.#redoStack.push(command);
+    return result;
   }
 
   executeCommand(command, { fromRedo = false } = {}) {
